@@ -1,0 +1,76 @@
+version: "2"
+
+services:
+  kafka_server_1:
+    image: docker.io/bitnami/kafka:3.6.1
+    container_name: kafka_server_1
+    hostname: kafka_server_1
+    ports:
+      - "9092:9092"
+    volumes:
+      - "kafka_data_1:/bitnami"
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka_server_1:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    networks:
+      - app-tier
+  kafka_server_2:
+    image: docker.io/bitnami/kafka:3.6.1
+    container_name: kafka_server_2
+    hostname: kafka_server_2
+    ports:
+      - "9094:9094"
+    volumes:
+      - "kafka_data_2:/bitnami"
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka_server_2:9095
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9094,CONTROLLER://:9095
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    networks:
+      - app-tier
+  kafka_server_3:
+    image: docker.io/bitnami/kafka:3.6.1
+    container_name: kafka_server_3
+    hostname: kafka_server_3
+    ports:
+      - "9096:9096"
+    volumes:
+      - "kafka_data_3:/bitnami"
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka_server_3:9097
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9096,CONTROLLER://:9097
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9096
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    networks:
+      - app-tier
+volumes:
+  kafka_data_1:
+    driver: local
+  kafka_data_2:
+    driver: local
+  kafka_data_3:
+    driver: local
+networks:
+  app-tier:
+    driver: bridge
