@@ -7,7 +7,7 @@ services:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SERVERS: zookeeper-1:22888:23888;zookeeper-2:32888:33888;zookeeper-3:42888:43888
+      ZOOKEEPER_SERVERS: 0.0.0.0:22888:23888;zookeeper-2:32888:33888;zookeeper-3:42888:43888
     ports:
       - "22181:2181" # External client communication port.
       - "22888:2888" # Peers connection port.
@@ -19,7 +19,7 @@ services:
       ZOOKEEPER_SERVER_ID: 2
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SERVERS: zookeeper-1:22888:23888;zookeeper-2:32888:33888;zookeeper-3:42888:43888
+      ZOOKEEPER_SERVERS: zookeeper-1:22888:23888;0.0.0.0:32888:33888;zookeeper-3:42888:43888
     ports:
       - "32181:2181" # External client communication port.
       - "32888:2888" # Peers connection port.
@@ -31,7 +31,7 @@ services:
       ZOOKEEPER_SERVER_ID: 3
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SERVERS: zookeeper-1:22888:23888;zookeeper-2:32888:33888;zookeeper-3:42888:43888
+      ZOOKEEPER_SERVERS: zookeeper-1:22888:23888;zookeeper-2:32888:33888;0.0.0.0:42888:43888
     ports:
       - "42181:2181" # External client communication port.
       - "42888:2888" # Peers connection port.
