@@ -24,17 +24,25 @@ public class HelloWorldProducer {
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         
-        Producer<String, String> producer = new KafkaProducer<>(properties);
-        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(TOPIC, null, "Hello2");
-        producer.send(producerRecord, (metadata, exception) -> {
-            if (metadata != null) {
-                LOGGER.info("MESSAGE TO TOPIC '{}'", metadata.topic());
+        for (int i = 0; i < 1000; ++i) {
+            try (Producer<String, String> producer = new KafkaProducer<>(properties)) {
+                ProducerRecord<String, String> producerRecord = new ProducerRecord<>(TOPIC, null, "Hello_" + i);
+                producer.send(producerRecord, (metadata, exception) -> {
+                    if (metadata != null) {
+                        LOGGER.info("MESSAGE TO TOPIC '{}'", metadata.topic());
+                    }
+                    if (exception != null) {
+                        LOGGER.info("SUBMIT MESSAGE EXCEPTION '{}'", exception.getLocalizedMessage());
+                    }
+                });
+                producer.flush();
+                //producer.close();// redundant
             }
-            if (exception != null) {
-                LOGGER.info("SUBMIT MESSAGE EXCEPTION '{}'", exception.getLocalizedMessage());
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-        });
-        producer.flush();
-        producer.close();
+        }
     }
 }
