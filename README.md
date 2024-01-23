@@ -14,6 +14,15 @@
 
 ---
 
+Kafka in `confluentinc/cp-zookeeper`:
+
+```bash
+[appuser@d940ac41c21b kafka]$ pwd
+/etc/kafka
+```
+
+---
+
 ### Create topic:
 
 ```bash
@@ -53,4 +62,24 @@ docker exec -it kafka-broker-1 kafka-console-producer --topic kinaction_hw --boo
 
 ```bash
 docker exec -it kafka-broker-1 kafka-console-consumer --topic kinaction_hw --bootstrap-server localhost:29092 --from-beginning
+```
+
+---
+
+### Start Kafka Connect for source:
+
+```bash
+docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/alert-source.properties
+```
+
+### Start Kafka Connect Consumer:
+
+```bash
+docker exec -it kafka-broker-1 kafka-console-consumer --topic kinaction_alert_connect --bootstrap-server localhost:29092 --from-beginning
+```
+
+### Start Kafka Connect for source and destination:
+
+```bash
+docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/alert-source.properties /resources-kafka/alert-sink.properties
 ```
