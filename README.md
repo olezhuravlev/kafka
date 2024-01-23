@@ -23,6 +23,19 @@ Kafka in `confluentinc/cp-zookeeper`:
 
 ---
 
+### Check if port opened:
+
+```bash
+$ nc -vz kafka-broker-1 29092
+Connection to kafka-broker-1 (172.22.0.4) 29092 port [tcp/*] succeeded!
+```
+
+### Check what uses a port:
+
+```bash
+$ sudo netstat -anp | grep 8083
+```
+
 ### Create topic:
 
 ```bash
@@ -75,10 +88,10 @@ docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standa
 ### Start Kafka Connect Consumer:
 
 ```bash
-docker exec -it kafka-broker-1 kafka-console-consumer --topic kinaction_alert_connect --bootstrap-server localhost:29092 --from-beginning
+docker exec -it kafka-connect kafka-console-consumer --topic kinaction_alert_connect --bootstrap-server kafka-broker-1:29092 --from-beginning
 ```
 
-### Start Kafka Connect for source and destination:
+### Start Kafka Connect for source and destination simultaneously:
 
 ```bash
 docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/alert-source.properties /resources-kafka/alert-sink.properties
