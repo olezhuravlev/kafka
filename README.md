@@ -36,6 +36,16 @@ Connection to kafka-broker-1 (172.22.0.4) 29092 port [tcp/*] succeeded!
 $ sudo netstat -anp | grep 8083
 ```
 
+### Find in child directories
+
+```bash
+$ ls -d */ | grep "bla-bla"
+$ ls -d */*/ | grep "bla-bla"
+$ ls -d */*/*/ | grep "bla-bla"
+$ ls -d */*/*/*/ | grep "bla-bla"
+etc.
+```
+
 ### Create topic:
 
 ```bash
@@ -79,20 +89,26 @@ docker exec -it kafka-broker-1 kafka-console-consumer --topic kinaction_hw --boo
 
 ---
 
-### Start Kafka Connect for source:
+### Start Kafka Connect Producer for text:
 
 ```bash
 docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/alert-source.properties
 ```
 
-### Start Kafka Connect Consumer:
+### Start Kafka Connect Consumer for text:
 
 ```bash
 docker exec -it kafka-connect kafka-console-consumer --topic kinaction_alert_connect --bootstrap-server kafka-broker-1:29092 --from-beginning
 ```
 
-### Start Kafka Connect for source and destination simultaneously:
+### Start Kafka Connect for text source and destination simultaneously:
 
 ```bash
 docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/alert-source.properties /resources-kafka/alert-sink.properties
+```
+
+### Start Kafka Connect for MySQL source and destination simultaneously:
+
+```bash
+docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/mysql-source.properties /resources-kafka/alert-sink.properties
 ```

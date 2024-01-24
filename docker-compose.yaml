@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   zookeeper-1:
-    image: confluentinc/cp-zookeeper:latest
+    image: "confluentinc/cp-zookeeper:${KAFKA_VERSION}"
     container_name: zookeeper-1
     environment:
       ZOOKEEPER_SERVER_ID: 1
@@ -14,8 +14,9 @@ services:
       - "23888:3888" # Leader election port.
     networks:
       - kafka-network
+
   kafka-broker-1:
-    image: confluentinc/cp-kafka:latest
+    image: "confluentinc/cp-kafka:${KAFKA_VERSION}"
     container_name: kafka-broker-1
     depends_on:
       - zookeeper-1
@@ -52,8 +53,9 @@ services:
       - /home/oleg/kafka/src/main/resources/kafka:/resources-kafka
     networks:
       - kafka-network
+
   kafka-broker-2:
-    image: confluentinc/cp-kafka:latest
+    image: "confluentinc/cp-kafka:${KAFKA_VERSION}"
     container_name: kafka-broker-2
     depends_on:
       - zookeeper-1
@@ -72,8 +74,9 @@ services:
       - /home/oleg/kafka/src/main/resources/kafka:/resources-kafka
     networks:
       - kafka-network
+
   kafka-broker-3:
-    image: confluentinc/cp-kafka:latest
+    image: "confluentinc/cp-kafka:${KAFKA_VERSION}"
     container_name: kafka-broker-3
     depends_on:
       - zookeeper-1
@@ -92,9 +95,10 @@ services:
       - /home/oleg/kafka/src/main/resources/kafka:/resources-kafka
     networks:
       - kafka-network
+
   kafka-ui:
+    image: "provectuslabs/kafka-ui:${KAFKA_UI_VERSION}"
     container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
     ports:
       - "8080:8080"
     depends_on:
@@ -109,6 +113,7 @@ services:
       DYNAMIC_CONFIG_ENABLED: 'true'
     networks:
       - kafka-network
+
 networks:
   kafka-network:
     driver: bridge

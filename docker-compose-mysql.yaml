@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+  mysql:
+    image: "mysql:${MYSQL_VERSION}"
+    container_name: mysql
+    #restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_USER: "admin"
+      MYSQL_PASSWORD: "admin"
+      MYSQL_DATABASE: "for_kafka"
+    command:
+      --server_id=123
+      --log_bin=/var/lib/mysql/binlog
+      --max_binlog_size=100M
+      --binlog_format=ROW
+    volumes:
+      - /home/oleg/kafka/src/main/resources/kafka/connectors/mysql:/docker-entrypoint-initdb.d
+#      - /home/oleg/kafka/src/main/resources/kafka/connectors/mysql/my.cnf.d:/etc/my.cnf.d
+#      - /home/oleg/kafka/src/main/resources/kafka/connectors/mysql/binlog:/var/log/mysql
+#      - /home/oleg/kafka/src/main/resources/kafka/connectors/mysql/conf/my.cnf:/var/lib/mysql/my.cnf
+#      - /home/oleg/kafka/src/main/resources/kafka/connectors/mysql/conf:/etc/mysql/conf.d
+    networks:
+      - kafka-network
+  adminer:
+    image: "adminer:${MYSQL_ADMINER_VERSION}"
+    container_name: adminer
+    #restart: always
+    ports:
+      - 8081:8080
+    networks:
+      - kafka-network
+networks:
+  kafka-network:
+    driver: bridge
