@@ -94,10 +94,10 @@ docker exec -it kafka-broker-1 kafka-console-consumer --topic kinaction_hw --boo
 ### Start Kafka Connect Producer for text:
 
 ```bash
-docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/alert-source.properties
+docker exec -it kafka-connect connect-standalone /resources-kafka/connectors/file/connect-standalone.properties /resources-kafka/connectors/file/alert-source.properties
 ```
 
-### Start Kafka Connect Consumer for text:
+### Start Kafka Connect console Consumer for text:
 
 ```bash
 docker exec -it kafka-connect kafka-console-consumer --topic kinaction_alert_connect --bootstrap-server kafka-broker-1:29092 --from-beginning
@@ -106,17 +106,17 @@ docker exec -it kafka-connect kafka-console-consumer --topic kinaction_alert_con
 ### Start Kafka Connect for text source and destination simultaneously:
 
 ```bash
-docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/alert-source.properties /resources-kafka/alert-sink.properties
+docker exec -it kafka-connect connect-standalone /resources-kafka/connectors/file/connect-standalone.properties /resources-kafka/connectors/file/alert-source.properties /resources-kafka/connectors/file/alert-sink.properties
 ```
 
 ### Start Kafka Connect Producer for MySql:
 
 ```bash
-docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/connectors/mysql/mysql-source.properties
+docker exec -it kafka-connect connect-standalone /resources-kafka/connectors/mysql/connect-standalone.properties /resources-kafka/connectors/mysql/mysql-source.properties
 ```
 
 ### Start Kafka Connect for MySql source and destination simultaneously:
 
 ```bash
-docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/connectors/mysql/mysql-source.properties /resources-kafka/alert-sink.properties
+
 ```
