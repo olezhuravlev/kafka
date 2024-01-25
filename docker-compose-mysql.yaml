@@ -9,6 +9,8 @@ services:
       MYSQL_USER: "admin"
       MYSQL_PASSWORD: "admin"
       MYSQL_DATABASE: "for_kafka"
+
+    # log_bin is a path to and prefix for binlog files (binlog.000001, binlog.000002 etc.).
     command:
       --server_id=123
       --log_bin=/var/lib/mysql/binlog

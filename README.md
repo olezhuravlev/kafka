@@ -57,7 +57,7 @@ Created topic kinaction_hw.
 ### List topics:
 
 ```bash
-$ docker exec -it kafka-broker-1 kafka-topics --list --bootstrap-server localhost:29092
+$ docker exec -it kafka-broker-1 kafka-topics --list --bootstrap-server kafka-broker-1:29092
 kinaction_hw
 ```
 
@@ -72,8 +72,10 @@ Topic: kinaction_hw	TopicId: Zjx4vTh4TX6t7woWQkalWQ	PartitionCount: 3	Replicatio
 ### Delete topic:
 
 ```bash
-docker exec -it kafka-broker-1 kafka-topics --delete --topic kinaction_hw --bootstrap-server localhost:29092
+docker exec -it kafka-broker-1 kafka-topics --delete --topic mysql_topic --bootstrap-server kafka-broker-1:29092
 ```
+
+> Option zookeeper is deprecated, use --bootstrap-server instead!
 
 ### Console producer:
 
@@ -107,8 +109,14 @@ docker exec -it kafka-connect kafka-console-consumer --topic kinaction_alert_con
 docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/alert-source.properties /resources-kafka/alert-sink.properties
 ```
 
-### Start Kafka Connect for MySQL source and destination simultaneously:
+### Start Kafka Connect Producer for MySql:
 
 ```bash
-docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/mysql-source.properties /resources-kafka/alert-sink.properties
+docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/connectors/mysql/mysql-source.properties
+```
+
+### Start Kafka Connect for MySql source and destination simultaneously:
+
+```bash
+docker exec -it kafka-connect connect-standalone /resources-kafka/connect-standalone.properties /resources-kafka/connectors/mysql/mysql-source.properties /resources-kafka/alert-sink.properties
 ```
