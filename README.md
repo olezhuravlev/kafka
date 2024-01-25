@@ -118,5 +118,5 @@ docker exec -it kafka-connect connect-standalone /resources-kafka/connectors/mys
 ### Start Kafka Connect for MySql source and destination simultaneously:
 
 ```bash
-
+docker exec -it kafka-connect connect-standalone /resources-kafka/connectors/mysql/connect-standalone.properties /resources-kafka/connectors/mysql/mysql-source.properties /resources-kafka/connectors/mysql/mysql-sink.properties
 ```
