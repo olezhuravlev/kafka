@@ -13,7 +13,10 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
+
+@Component
 public class HelloWorldConsumer {
     
     final static Logger LOGGER = LoggerFactory.getLogger(HelloWorldConsumer.class);
