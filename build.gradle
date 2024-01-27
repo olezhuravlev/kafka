@@ -33,7 +33,7 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-    testRuntimeOnly 'org.testcontainers:kafka'
+    testImplementation 'org.testcontainers:kafka'
 
     testCompileOnly 'junit:junit'
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
