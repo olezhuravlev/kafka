@@ -1,11 +1,11 @@
 package org.example;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.concurrent.CompletableFuture;
 
-import org.example.messages.Farewell;
+import org.example.configurations.EmbeddedKafkaHolder;
 import org.example.messages.Greeting;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,8 +13,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
 
 @SpringBootTest
+@EmbeddedKafka
+@DirtiesContext
 public class ApplicationTest {
     
     @Value(value = "${topic}")
@@ -24,30 +28,25 @@ public class ApplicationTest {
     @Qualifier("kafkaTemplate")
     private KafkaTemplate kafkaTemplate;
     
-//    @Autowired
-//    @Qualifier("greetingKafkaTemplate")
-//    private KafkaTemplate greetingKafkaTemplate;
-//
-//    @Autowired
-//    @Qualifier("multiTypeKafkaTemplate")
-//    private KafkaTemplate multiTypeKafkaTemplate;
+    @Autowired
+    @Qualifier("greetingKafkaTemplate")
+    private KafkaTemplate greetingKafkaTemplate;
     
-    //    private ConcurrentKafkaListenerContainerFactory<String, Greeting> greetingKafkaListenerContainerFactory;
+    @BeforeAll
+    public static void beforeAll() {
+        EmbeddedKafkaHolder.getEmbeddedKafkaBroker().addTopics("hat", "cat");
+    }
     
-    //    @Autowired
-    //    @Qualifier("consumerFactory")
-    //    private ConsumerFactory<String, Object> consumerFactory;
-    
-    @Test
-    void emptyTest() {
-        assertTrue(true);
+    @AfterAll
+    public static void afterAll() {
+        EmbeddedKafkaHolder.getEmbeddedKafkaBroker().destroy();
     }
     
     @Test
     void kafkaTemplateTest() {
-
+        
         String message = "Test string message";
-
+        //final ProducerRecord<String, String> record = createRecord(message);
         CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(topic, message);
         future.whenComplete((result, ex) -> {
             if (ex == null) {
@@ -57,56 +56,56 @@ public class ApplicationTest {
             }
         });
     }
-
-//    @Test
-//    void greetingTemplateTest() {
-//
-//        Greeting greeting = new Greeting("Greetings!", "Hello world!");
-//
-//        CompletableFuture<SendResult<String, Greeting>> future = greetingKafkaTemplate.send(topic, greeting);
-//        future.whenComplete((result, ex) -> {
-//            if (ex == null) {
-//                System.out.println("Sent message=[" + greeting + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-//            } else {
-//                System.out.println("Unable to send message=[" + greeting + "] due to : " + ex.getMessage());
-//            }
-//        });
-//    }
-//
-//    @Test
-//    void greetingTemplateMultitypeTest() {
-//
-//        Greeting greeting = new Greeting("Greetings!", "Hello world!");
-//        Farewell farewell = new Farewell("Farewell!", 25);
-//        String message = "Simple string";
-//
-//        CompletableFuture<SendResult<String, Greeting>> futureGreeting = multiTypeKafkaTemplate.send(topic, greeting);
-//        futureGreeting.whenComplete((result, ex) -> {
-//            if (ex == null) {
-//                System.out.println("Sent message=[" + greeting + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-//            } else {
-//                System.out.println("Unable to send message=[" + greeting + "] due to : " + ex.getMessage());
-//            }
-//        });
-//
-//        CompletableFuture<SendResult<String, Farewell>> futureFarewell = multiTypeKafkaTemplate.send(topic, farewell);
-//        futureFarewell.whenComplete((result, ex) -> {
-//            if (ex == null) {
-//                System.out.println("Sent message=[" + farewell + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-//            } else {
-//                System.out.println("Unable to send message=[" + farewell + "] due to : " + ex.getMessage());
-//            }
-//        });
-//
-//        CompletableFuture<SendResult<String, String>> futureString = multiTypeKafkaTemplate.send(topic, message);
-//        futureString.whenComplete((result, ex) -> {
-//            if (ex == null) {
-//                System.out.println("Sent message=[" + message + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-//            } else {
-//                System.out.println("Unable to send message=[" + message + "] due to : " + ex.getMessage());
-//            }
-//        });
-//    }
+    
+    @Test
+    void greetingTemplateTest() {
+        
+        Greeting greeting = new Greeting("Greetings!", "Hello world!");
+        
+        CompletableFuture<SendResult<String, Greeting>> future = greetingKafkaTemplate.send(topic, greeting);
+        future.whenComplete((result, ex) -> {
+            if (ex == null) {
+                System.out.println("Sent message=[" + greeting + "] with offset=[" + result.getRecordMetadata().offset() + "]");
+            } else {
+                System.out.println("Unable to send message=[" + greeting + "] due to : " + ex.getMessage());
+            }
+        });
+    }
+    //
+    //    @Test
+    //    void greetingTemplateMultitypeTest() {
+    //
+    //        Greeting greeting = new Greeting("Greetings!", "Hello world!");
+    //        Farewell farewell = new Farewell("Farewell!", 25);
+    //        String message = "Simple string";
+    //
+    //        CompletableFuture<SendResult<String, Greeting>> futureGreeting = multiTypeKafkaTemplate.send(topic, greeting);
+    //        futureGreeting.whenComplete((result, ex) -> {
+    //            if (ex == null) {
+    //                System.out.println("Sent message=[" + greeting + "] with offset=[" + result.getRecordMetadata().offset() + "]");
+    //            } else {
+    //                System.out.println("Unable to send message=[" + greeting + "] due to : " + ex.getMessage());
+    //            }
+    //        });
+    //
+    //        CompletableFuture<SendResult<String, Farewell>> futureFarewell = multiTypeKafkaTemplate.send(topic, farewell);
+    //        futureFarewell.whenComplete((result, ex) -> {
+    //            if (ex == null) {
+    //                System.out.println("Sent message=[" + farewell + "] with offset=[" + result.getRecordMetadata().offset() + "]");
+    //            } else {
+    //                System.out.println("Unable to send message=[" + farewell + "] due to : " + ex.getMessage());
+    //            }
+    //        });
+    //
+    //        CompletableFuture<SendResult<String, String>> futureString = multiTypeKafkaTemplate.send(topic, message);
+    //        futureString.whenComplete((result, ex) -> {
+    //            if (ex == null) {
+    //                System.out.println("Sent message=[" + message + "] with offset=[" + result.getRecordMetadata().offset() + "]");
+    //            } else {
+    //                System.out.println("Unable to send message=[" + message + "] due to : " + ex.getMessage());
+    //            }
+    //        });
+    //    }
     
     //    @Test
     //    void greetingTest() {
