@@ -1,0 +1,24 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        //jcenter()
+        maven {
+            name "JCenter Gradle Plugins"
+            url "https://dl.bintray.com/gradle/gradle-plugins"
+        }
+    }
+}
+
+// OPTIONAL HTTP PROXY SETTING FOR GRADLE
+//System.setProperty('http.proxyHost', 'www.somehost.org')
+//System.setProperty('http.proxyPort', '8080')
+//System.setProperty('http.proxyUser', 'userid')
+//System.setProperty('http.proxyPassword', 'password')
+
+// OPTIONAL HTTPS PROXY SETTING FOR GRADLE
+//System.setProperty('https.proxyHost', 'www.somehost.org')
+//System.setProperty('https.proxyPort', '8080')
+//System.setProperty('https.proxyUser', 'userid')
+//System.setProperty('https.proxyPassword', 'password')
+
+rootProject.name = "kafka"
