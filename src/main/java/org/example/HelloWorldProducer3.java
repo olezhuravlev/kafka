@@ -9,9 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-@Component
 public class HelloWorldProducer3 {
     
     final static Logger LOGGER = LoggerFactory.getLogger(HelloWorldProducer3.class);

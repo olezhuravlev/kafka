@@ -43,6 +43,8 @@ dependencies {
 
     testCompileOnly 'junit:junit'
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+
+    testImplementation 'org.testcontainers:testcontainers:1.19.4'
 }
 
 tasks.named('test') {
