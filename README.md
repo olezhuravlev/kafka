@@ -46,6 +46,13 @@ $ ls -d */*/*/*/ | grep "bla-bla"
 etc.
 ```
 
+### Remove just one container of Docker Compose:
+```bash
+$ docker-compose rm -s -v -f schema-registry
+Going to remove schema-registry
+Removing schema-registry ... done
+```
+
 ### Create topic:
 
 ```bash
