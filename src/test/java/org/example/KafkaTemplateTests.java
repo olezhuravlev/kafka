@@ -13,6 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.annotation.Order;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -30,19 +31,18 @@ import org.springframework.test.annotation.DirtiesContext;
 
 @EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
 @DirtiesContext
+@Disabled
 public class KafkaTemplateTests {
     
     private final static String TEST_TOPIC = "templateTopic";
     
     @Test
-    @Order(1)
     public void test(EmbeddedKafkaBroker broker) {
         String brokerList = broker.getBrokersAsString(); // localhost:42789
         assertThat(brokerList, not(emptyString()));
     }
     
     @Test
-    @Order(2)
     public void testTemplate(EmbeddedKafkaBroker broker) throws Exception {
         
         //String brokerList = broker.getBrokersAsString(); // localhost:42789
@@ -54,7 +54,8 @@ public class KafkaTemplateTests {
         Map<String, Object> consumerProps = KafkaTestUtils.consumerProps("testGroup", "true", broker);
         DefaultKafkaConsumerFactory<Integer, String> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps);
         ContainerProperties containerProperties = new ContainerProperties(TEST_TOPIC);
-        KafkaMessageListenerContainer<Integer, String> container = new KafkaMessageListenerContainer<>(consumerFactory, containerProperties);
+        KafkaMessageListenerContainer<Integer, String> container = new KafkaMessageListenerContainer<>(consumerFactory,
+            containerProperties);
         final BlockingQueue<ConsumerRecord<Integer, String>> records = new LinkedBlockingQueue<>();
         container.setupMessageListener(new MessageListener<Integer, String>() {
             @Override

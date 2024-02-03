@@ -41,4 +41,3 @@ public class EmbeddedKafkaIntegrationTest {
         assertThat(kafkaConsumer.getPayload(), containsString(data));
     }
 }
-
