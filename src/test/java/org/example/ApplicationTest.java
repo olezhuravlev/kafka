@@ -1,5 +1,9 @@
 package org.example;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.concurrent.CompletableFuture;
 
 import org.example.configurations.EmbeddedKafkaHolder;
@@ -46,14 +50,12 @@ public class ApplicationTest {
     void kafkaTemplateTest() {
         
         String message = "Test string message";
-        //final ProducerRecord<String, String> record = createRecord(message);
+        
         CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(topic, message);
         future.whenComplete((result, ex) -> {
-            if (ex == null) {
-                System.out.println("Sent message=[" + message + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-            } else {
-                System.out.println("Unable to send message=[" + message + "] due to : " + ex.getMessage());
-            }
+            assertNull(ex);
+            assertNotNull(result);
+            assertEquals(message, result.getProducerRecord().value());
         });
     }
     
@@ -64,76 +66,9 @@ public class ApplicationTest {
         
         CompletableFuture<SendResult<String, Greeting>> future = greetingKafkaTemplate.send(topic, greeting);
         future.whenComplete((result, ex) -> {
-            if (ex == null) {
-                System.out.println("Sent message=[" + greeting + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-            } else {
-                System.out.println("Unable to send message=[" + greeting + "] due to : " + ex.getMessage());
-            }
+            assertNull(ex);
+            assertNotNull(result);
+            assertEquals(greeting, result.getProducerRecord().value());
         });
     }
-    //
-    //    @Test
-    //    void greetingTemplateMultitypeTest() {
-    //
-    //        Greeting greeting = new Greeting("Greetings!", "Hello world!");
-    //        Farewell farewell = new Farewell("Farewell!", 25);
-    //        String message = "Simple string";
-    //
-    //        CompletableFuture<SendResult<String, Greeting>> futureGreeting = multiTypeKafkaTemplate.send(topic, greeting);
-    //        futureGreeting.whenComplete((result, ex) -> {
-    //            if (ex == null) {
-    //                System.out.println("Sent message=[" + greeting + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-    //            } else {
-    //                System.out.println("Unable to send message=[" + greeting + "] due to : " + ex.getMessage());
-    //            }
-    //        });
-    //
-    //        CompletableFuture<SendResult<String, Farewell>> futureFarewell = multiTypeKafkaTemplate.send(topic, farewell);
-    //        futureFarewell.whenComplete((result, ex) -> {
-    //            if (ex == null) {
-    //                System.out.println("Sent message=[" + farewell + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-    //            } else {
-    //                System.out.println("Unable to send message=[" + farewell + "] due to : " + ex.getMessage());
-    //            }
-    //        });
-    //
-    //        CompletableFuture<SendResult<String, String>> futureString = multiTypeKafkaTemplate.send(topic, message);
-    //        futureString.whenComplete((result, ex) -> {
-    //            if (ex == null) {
-    //                System.out.println("Sent message=[" + message + "] with offset=[" + result.getRecordMetadata().offset() + "]");
-    //            } else {
-    //                System.out.println("Unable to send message=[" + message + "] due to : " + ex.getMessage());
-    //            }
-    //        });
-    //    }
-    
-    //    @Test
-    //    void greetingTest() {
-    //
-    //        Greeting greeting = new Greeting("Greetings!", "Hello world!");
-    //        ProducerRecord<Greeting, String> producerRecord = new ProducerRecord<>(topicName, greeting, greeting.getMsg());
-    //        multiTypeKafkaTemplate.send(producerRecord);
-    //
-    //        Consumer consumer = consumerFactory.createConsumer();
-    //        consumer.subscribe(List.of("topicName"));
-    //        ConsumerRecords consumerRecords = consumer.poll(Duration.ofSeconds(1));
-    //        Iterator iterator = consumerRecords.iterator();
-    //        while (iterator.hasNext()) {
-    //
-    //            ConsumerRecord record = (ConsumerRecord) iterator.next();
-    //            System.out.println(record);
-    //
-    //            long offset = record.offset();
-    //            OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(++offset, "");
-    //
-    //            Map<TopicPartition, OffsetAndMetadata> kafkaOffsetMap = new HashMap<>();
-    //            kafkaOffsetMap.put(new TopicPartition("myPartition", record.partition()), offsetAndMetadata);
-    //            consumer.commitSync(kafkaOffsetMap);
-    //        }
-    //    }
-    //
-    //    @Test
-    //    void farewellTest() {
-    //        multiTypeKafkaTemplate.send(topicName, new Farewell("Farewell!", 1));
-    //    }
 }
