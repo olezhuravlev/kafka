@@ -18,7 +18,7 @@ import org.springframework.test.annotation.DirtiesContext;
 @SpringBootTest
 @EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
 @DirtiesContext
-public class EmbeddedKafkaIntegrationTest {
+public class ProducerConsumerEmbeddedPort9092 {
     
     @Autowired
     private KafkaConsumer kafkaConsumer;
@@ -36,7 +36,7 @@ public class EmbeddedKafkaIntegrationTest {
         
         kafkaProducer.send(testTopic, data);
         
-        boolean messageConsumed = kafkaConsumer.getLatch().await(10, TimeUnit.SECONDS);
+        boolean messageConsumed = kafkaConsumer.getLatch().await(100, TimeUnit.MILLISECONDS);
         assertTrue(messageConsumed);
         assertThat(kafkaConsumer.getPayload(), containsString(data));
     }

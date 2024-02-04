@@ -34,15 +34,13 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
-@Import(KafkaTestContainersLiveTest.KafkaTestContainersConfiguration.class)
-@TestPropertySource(locations = "classpath:application.properties")
+@Import(KafkaTestContainer.KafkaTestContainersConfiguration.class)
 @DirtiesContext
-public class KafkaTestContainersLiveTest {
+public class KafkaTestContainer {
     
     public static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.3"));
     
@@ -118,7 +116,7 @@ public class KafkaTestContainersLiveTest {
     }
     
     @Test
-    public void givenKafkaDockerContainer_whenSendingWithSimpleProducer_thenMessageReceived() throws Exception {
+    public void kafkaProducerConsumer() throws Exception {
         
         String data = "Sending with our own simple KafkaProducer";
         kafkaProducer.send(testTopic, data);

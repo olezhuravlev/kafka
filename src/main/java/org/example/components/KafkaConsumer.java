@@ -21,12 +21,7 @@ public class KafkaConsumer {
     
     @KafkaListener(topics = "${topic}")
     public void receive(ConsumerRecord<?, ?> consumerRecord) {
-        LOGGER.info("received payload='{}'", consumerRecord.toString());
         payload = consumerRecord.toString();
         latch.countDown();
-    }
-    
-    public void resetLatch() {
-        latch = new CountDownLatch(1);
     }
 }

@@ -50,30 +50,30 @@ public class HelloWorldConsumer {
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class.getName());
         properties.put("schema.registry.url", schemaRegistryUrl);
         
-        HelloWorldConsumer hwConsumer = new HelloWorldConsumer();
-        hwConsumer.consume(properties);
-        Runtime.getRuntime().addShutdownHook(new Thread(hwConsumer::shutdown));
+        //HelloWorldConsumer hwConsumer = new HelloWorldConsumer();
+        consume(properties);
+        //Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
     }
     
     private void consume(Properties properties) {
         try (KafkaConsumer<Long, Alert> consumer = new KafkaConsumer<>(properties)) {
             consumer.subscribe(Arrays.asList(topic));
             
-            while (keepConsuming) {
+            while (true) {
                 ConsumerRecords<Long, Alert> records = consumer.poll(Duration.ofMillis(250));
                 for (ConsumerRecord<Long, Alert> record : records) {
                     String message = String.format("CONSUMED RECORD KEY = {}, VALUE = {}, OFFSET = {}, PARTITION = {}", record.key(), record.value(), record.offset(),
                         record.partition());
                     consumedMessages.add(message);
-                    LOGGER.info(message);
+                    return;
                 }
             }
         }
     }
     
-    private void shutdown() {
-        keepConsuming = false;
-    }
+//    private void shutdown() {
+//        keepConsuming = false;
+//    }
     
     public List<String> getConsumedMessages() {
         return new ArrayList<>(consumedMessages);

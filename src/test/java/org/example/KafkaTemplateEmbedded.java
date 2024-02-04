@@ -10,7 +10,6 @@ import org.example.configurations.EmbeddedKafkaHolder;
 import org.example.messages.Greeting;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,8 +23,7 @@ import org.springframework.test.annotation.DirtiesContext;
 @SpringBootTest
 @EmbeddedKafka
 @DirtiesContext
-@Disabled
-public class ApplicationTest {
+public class KafkaTemplateEmbedded {
     
     @Value(value = "${topic}")
     private String topic;
