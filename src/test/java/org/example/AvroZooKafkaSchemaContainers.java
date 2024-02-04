@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.example.components.AvroConsumer;
+import org.example.components.AvroProducer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -20,13 +22,13 @@ import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
 @DirtiesContext
-public class ZooKafkaSchemaContainers {
+public class AvroZooKafkaSchemaContainers {
     
     @Autowired
-    org.example.components.HelloWorldProducer helloWorldProducer;
+    AvroProducer avroProducer;
     
     @Autowired
-    org.example.components.HelloWorldConsumer helloWorldConsumer;
+    AvroConsumer avroConsumer;
     
     private static final Network network = Network.newNetwork();
     
@@ -96,12 +98,12 @@ public class ZooKafkaSchemaContainers {
     }
     
     @Test
-    void kafkaTemplateTest() throws Exception {
+    void avroProducerConsumerTest() {
         
-        new Thread(() -> helloWorldProducer.produce(1)).start();
-        helloWorldConsumer.consume();
+        new Thread(() -> avroProducer.produce(1)).start();
+        avroConsumer.consume();
         
-        List<String> consumedMessages = helloWorldConsumer.getConsumedMessages();
+        List<String> consumedMessages = avroConsumer.getConsumedMessages();
         Assertions.assertFalse(consumedMessages.isEmpty(), "Consumed message must be presented!");
     }
 }

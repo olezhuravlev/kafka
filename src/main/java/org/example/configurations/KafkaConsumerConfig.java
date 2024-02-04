@@ -64,15 +64,15 @@ public class KafkaConsumerConfig {
         return props;
     }
     
-    @KafkaListener(topics = "kafkaTopic,testKafkaTopic")
-    public void listen1(String data) {
-        System.out.println("LISTENER_1: " + data);
-    }
-    
-    @KafkaListener(id = "myListener", topics = "kafkaTopic,testKafkaTopic", autoStartup = "${listen.auto.start:true}", concurrency = "${listen.concurrency:3}")
-    public void listen2(String data) {
-        System.out.println("LISTENER_2: " + data);
-    }
+//    @KafkaListener(topics = "kafkaTopic,testKafkaTopic")
+//    public void listen1(String data) {
+//        System.out.println("LISTENER_1: " + data);
+//    }
+
+//    @KafkaListener(id = "myListener", topics = "kafkaTopic,testKafkaTopic", autoStartup = "${listen.auto.start:true}", concurrency = "${listen.concurrency:3}")
+//    public void listen2(String data) {
+//        System.out.println("LISTENER_2: " + data);
+//    }
     
     @KafkaListener(id = "thing3", topicPartitions = {
         @TopicPartition(topic = "topic1", partitions = { "0", "1" }),
@@ -114,15 +114,15 @@ public class KafkaConsumerConfig {
         System.out.println("LISTENER_8: " + foo + " RECEIVED_KEY: " + key + " RECEIVED_PARTITION: " + partition + " RECEIVED_TOPIC: " + topic + " RECEIVED_TIMESTAMP:" + ts);
     }
     
-    @KafkaListener(topics = "kafkaTopic,testKafkaTopic")
-    public void listen9(String str, ConsumerRecordMetadata meta) {
-        System.out.println("LISTENER_9: " + str + " ConsumerRecordMetadata: " + meta);
-    }
-    
-    @KafkaListener(topics = "kafkaTopic,testKafkaTopic", groupId = "group", properties = { "max.poll.interval.ms:60000", ConsumerConfig.MAX_POLL_RECORDS_CONFIG + "=100" })
-    public void listen10(ConsumerRecords<?, ?> records) {
-        System.out.println("LISTENER_10: " + records);
-    }
+//    @KafkaListener(topics = "kafkaTopic,testKafkaTopic")
+//    public void listen9(String str, ConsumerRecordMetadata meta) {
+//        System.out.println("LISTENER_9: " + str + " ConsumerRecordMetadata: " + meta);
+//    }
+
+//    @KafkaListener(topics = "kafkaTopic,testKafkaTopic", groupId = "group", properties = { "max.poll.interval.ms:60000", ConsumerConfig.MAX_POLL_RECORDS_CONFIG + "=100" })
+//    public void listen10(ConsumerRecords<?, ?> records) {
+//        System.out.println("LISTENER_10: " + records);
+//    }
     
     //////////////////////////////////////////////////////////////
     // Obtain Consumer group.id.
@@ -201,10 +201,10 @@ public class KafkaConsumerConfig {
     
     //////////////////////////////////////////////////////////////
     // Custom listener interface.
-    @MyThreeConsumersListener(id = "my.group", topics = "kafkaTopic,testKafkaTopic")
-    public void customInterfaceListener(String data) {
-        System.out.println("customInterfaceListener: " + data);
-    }
+//    @MyThreeConsumersListener(id = "my.group", topics = "kafkaTopic,testKafkaTopic")
+//    public void customInterfaceListener(String data) {
+//        System.out.println("customInterfaceListener: " + data);
+//    }
     
     //////////////////////////////////////////////////////////////
     @KafkaHandler(isDefault = true)

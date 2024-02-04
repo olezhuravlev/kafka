@@ -47,7 +47,7 @@ public class KafkaTemplateEmbedded {
     }
     
     @Test
-    void kafkaTemplateTest() {
+    void kafkaTemplateStringTest() {
         
         String message = "Test string message";
         
@@ -60,7 +60,7 @@ public class KafkaTemplateEmbedded {
     }
     
     @Test
-    void greetingTemplateTest() {
+    void kafkaTemplateGreetingTest() {
         
         Greeting greeting = new Greeting("Greetings!", "Hello world!");
         

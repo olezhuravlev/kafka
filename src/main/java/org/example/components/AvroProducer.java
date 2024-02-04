@@ -18,9 +18,9 @@ import org.springframework.stereotype.Component;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 
 @Component
-public class HelloWorldProducer {
+public class AvroProducer {
     
-    final static Logger LOGGER = LoggerFactory.getLogger(HelloWorldProducer.class);
+    final static Logger LOGGER = LoggerFactory.getLogger(AvroProducer.class);
     
     @Value("${topic}")
     private String topic;
@@ -53,7 +53,7 @@ public class HelloWorldProducer {
                     }
                 });
                 producer.flush();
-                //producer.close();// redundant if in `try(){}`-block!
+                //producer.close();// redundant if nested in `try(){}`-block!
             }
             try {
                 Thread.sleep(1000);

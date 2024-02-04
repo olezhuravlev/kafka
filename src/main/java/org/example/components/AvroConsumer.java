@@ -12,18 +12,13 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.kafkainaction.Alert;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 
 @Component
-public class HelloWorldConsumer {
-    
-    final static Logger LOGGER = LoggerFactory.getLogger(HelloWorldConsumer.class);
-    private static volatile boolean keepConsuming = true;
+public class AvroConsumer {
     
     @Value("${topic}")
     private String topic;
@@ -62,18 +57,14 @@ public class HelloWorldConsumer {
             while (true) {
                 ConsumerRecords<Long, Alert> records = consumer.poll(Duration.ofMillis(250));
                 for (ConsumerRecord<Long, Alert> record : records) {
-                    String message = String.format("CONSUMED RECORD KEY = {}, VALUE = {}, OFFSET = {}, PARTITION = {}", record.key(), record.value(), record.offset(),
-                        record.partition());
+                    String message = String.format("CONSUMED RECORD KEY = {}, VALUE = {}, OFFSET = {}, PARTITION = {}", record.key(),
+                        record.value(), record.offset(), record.partition());
                     consumedMessages.add(message);
                     return;
                 }
             }
         }
     }
-    
-//    private void shutdown() {
-//        keepConsuming = false;
-//    }
     
     public List<String> getConsumedMessages() {
         return new ArrayList<>(consumedMessages);
