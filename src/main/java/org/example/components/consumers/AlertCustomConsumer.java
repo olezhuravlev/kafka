@@ -34,7 +34,7 @@ public class AlertCustomConsumer {
     public static void main(String[] args) {
         
         AlertCustomConsumer consumer = new AlertCustomConsumer();
-        consumer.consume("kinaction_alert");
+        consumer.consumeAutoCommit("kinaction_alert");
         
         Runtime.getRuntime().addShutdownHook(new Thread(consumer::shutdown));
     }
@@ -43,14 +43,14 @@ public class AlertCustomConsumer {
         consumingAttemptCounter = 0;
     }
     
-    public Optional<Object[]> consume(String topic) {
+    public Optional<Object[]> consumeAutoCommit(String topic) {
         
         Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
+        
         properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
         properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         
@@ -78,9 +78,9 @@ public class AlertCustomConsumer {
                 while (consumingAttemptCounter > 0) {
                     ConsumerRecords<AlertCustom, String> consumerRecords = consumer.poll(Duration.ofMillis(250));
                     for (ConsumerRecord<AlertCustom, String> consumerRecord : consumerRecords) {
-                        LOGGER.info("kinaction_info offset={}, key={}, value={}", consumerRecord.offset(), consumerRecord.key(),
+                        LOGGER.info("+++ AlertCustomConsumer: consumeAutoCommit: offset={}, key={}, value={}", consumerRecord.offset(),
+                            consumerRecord.key(),
                             consumerRecord.value());
-                        commitOffset(consumerRecord.offset(), consumerRecord.partition(), consumerRecord.topic(), consumer);
                         return Optional.of(new Object[] { consumerRecord.key(), consumerRecord.value() });
                     }
                     Thread.sleep(100);
@@ -94,7 +94,58 @@ public class AlertCustomConsumer {
         return Optional.empty();
     }
     
-    private static void commitOffset(long offset, int partition, String topic, KafkaConsumer<AlertCustom, String> consumer) {
+    public Optional<Object[]> consumeCommitAsync(String topic) {
+        
+        Properties properties = new Properties();
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
+        
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        //properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
+        // Reading from the beginning:
+        // kaProperties.put("group.id", UUID.randomUUID().toString());
+        // kaProperties.put("auto.offset.reset", "earliest");
+        
+        // Reading from the end:
+        // kaProperties.put("group.id", UUID.randomUUID().toString());
+        // kaProperties.put("auto.offset.reset", "latest");
+        
+        // offsetsForTimes
+        // Map<TopicPartition, OffsetAndTimestamp> kaOffsetMap = consumer.offsetsForTimes(timeStampMapper);
+        // consumer.seek(partitionOne, kaOffsetMap.get(partitionOne).offset());
+        
+        try (
+            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
+            //consumer.subscribe(List.of(topic));
+            
+            TopicPartition partitionZero = new TopicPartition(topic, 0);
+            consumer.assign(List.of(partitionZero));
+            
+            consumingAttemptCounter = 50;
+            try {
+                while (consumingAttemptCounter > 0) {
+                    ConsumerRecords<AlertCustom, String> consumerRecords = consumer.poll(Duration.ofMillis(250));
+                    for (ConsumerRecord<AlertCustom, String> consumerRecord : consumerRecords) {
+                        LOGGER.info("+++ AlertCustomConsumer: consumeCommitAsync: offset={}, key={}, value={}", consumerRecord.offset(),
+                            consumerRecord.key(),
+                            consumerRecord.value());
+                        commitOffsetAsync(consumerRecord.offset(), consumerRecord.partition(), consumerRecord.topic(), consumer);
+                        return Optional.of(new Object[] { consumerRecord.key(), consumerRecord.value() });
+                    }
+                    Thread.sleep(100);
+                    --consumingAttemptCounter;
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
+        return Optional.empty();
+    }
+    
+    private static void commitOffsetAsync(long offset, int partition, String topic, KafkaConsumer<AlertCustom, String> consumer) {
         OffsetAndMetadata offsetMeta = new OffsetAndMetadata(++offset, "");
         Map<TopicPartition, OffsetAndMetadata> kaOffsetMap = new HashMap<>();
         kaOffsetMap.put(new TopicPartition(topic, partition), offsetMeta);
@@ -102,14 +153,12 @@ public class AlertCustomConsumer {
     }
     
     private static void onComplete(Map<TopicPartition, OffsetAndMetadata> map, Exception e) {
-        if (e != null) {
+        if (e == null) {
             for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : map.entrySet()) {
-                LOGGER.info("kinaction_error: offset {}", entry.getValue().offset());
+                LOGGER.info("+++ AlertCustomConsumer: offset {}", entry.getValue().offset());
             }
         } else {
-            for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : map.entrySet()) {
-                LOGGER.info("kinaction_info: offset {}", entry.getValue().offset());
-            }
+            LOGGER.info("+++ AlertCustomConsumer: Exception {}", e.getLocalizedMessage());
         }
     }
 }

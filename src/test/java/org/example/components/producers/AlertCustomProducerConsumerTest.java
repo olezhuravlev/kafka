@@ -48,9 +48,9 @@ public class AlertCustomProducerConsumerTest {
     
     @Test
     @SneakyThrows
-    void kafkaTemplateStringTest() {
+    void commitAutoTest() {
         
-        String testMessage = "Test message";
+        String testMessage = "Test message Auto Commit";
         AlertCustom testAlert = new AlertCustom(1, "Stage 1", AlertCustom.AlertLevel.CRITICAL, testMessage);
         
         new Thread(() -> {
@@ -63,7 +63,37 @@ public class AlertCustomProducerConsumerTest {
             }
         }).start();
         
-        Optional<Object[]> payload = alertCustomConsumer.consume(topic);
+        // Payload 1.
+        Optional<Object[]> payload = alertCustomConsumer.consumeAutoCommit(topic);
+        assertThat("Payload must be not empty!", payload.isPresent(), is(true));
+        
+        Object[] result = payload.get();
+        assertThat("First value of payload must be AlertCustom!", result[0], instanceOf(AlertCustom.class));
+        assertThat("Second value of payload must be String!", result[1], instanceOf(String.class));
+        
+        assertThat("Key of Payload must be equal to test alert!", result[0], equalTo(testAlert));
+        assertThat("Value of Payload must be equal to test message!", result[1], equalTo(testMessage));
+    }
+    
+    @Test
+    @SneakyThrows
+    void commitAsyncTest() {
+        
+        String testMessage = "Test message Commit Async";
+        AlertCustom testAlert = new AlertCustom(1, "Stage 1", AlertCustom.AlertLevel.CRITICAL, testMessage);
+        
+        new Thread(() -> {
+            try {
+                alertCustomProducer.produce(topic, testMessage, testAlert);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+        
+        // Payload 1.
+        Optional<Object[]> payload = alertCustomConsumer.consumeCommitAsync(topic);
         assertThat("Payload must be not empty!", payload.isPresent(), is(true));
         
         Object[] result = payload.get();
