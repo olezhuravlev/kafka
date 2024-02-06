@@ -1,4 +1,4 @@
-package org.example.components;
+package org.example.components.consumers;
 
 import java.time.Duration;
 import java.util.ArrayList;

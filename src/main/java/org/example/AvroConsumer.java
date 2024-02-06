@@ -1,6 +1,6 @@
 package org.example;
 
-import static org.example.HelloWorldProducer.BOOTSTRAP_SERVERS;
+import static org.example.AvroProducer.BOOTSTRAP_SERVERS;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -17,9 +17,9 @@ import org.slf4j.LoggerFactory;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 
-public class HelloWorldConsumer {
+public class AvroConsumer {
     
-    final static Logger LOGGER = LoggerFactory.getLogger(HelloWorldConsumer.class);
+    final static Logger LOGGER = LoggerFactory.getLogger(AvroConsumer.class);
     private static volatile boolean keepConsuming = true;
     
     public static void main(String[] args) {
@@ -33,14 +33,14 @@ public class HelloWorldConsumer {
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class.getName());
         properties.put("schema.registry.url", "http://schema-registry:8081");
         
-        HelloWorldConsumer hwConsumer = new HelloWorldConsumer();
+        AvroConsumer hwConsumer = new AvroConsumer();
         hwConsumer.consume(properties);
         Runtime.getRuntime().addShutdownHook(new Thread(hwConsumer::shutdown));
     }
     
     private void consume(Properties properties) {
         try (KafkaConsumer<Long, Alert> consumer = new KafkaConsumer<>(properties)) {
-            consumer.subscribe(Arrays.asList(HelloWorldProducer.TOPIC));
+            consumer.subscribe(Arrays.asList(AvroProducer.TOPIC));
             
             while (keepConsuming) {
                 ConsumerRecords<Long, Alert> records = consumer.poll(Duration.ofMillis(250));

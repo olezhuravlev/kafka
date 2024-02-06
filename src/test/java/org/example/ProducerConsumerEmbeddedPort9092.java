@@ -5,8 +5,8 @@ import static org.hamcrest.core.StringContains.containsString;
 
 import java.util.concurrent.TimeUnit;
 
-import org.example.components.KafkaConsumer;
-import org.example.components.KafkaProducer;
+import org.example.components.consumers.KafkaConsumer;
+import org.example.components.producers.KafkaProducer;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
