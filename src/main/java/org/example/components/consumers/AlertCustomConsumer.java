@@ -14,7 +14,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.example.messages.AlertCustom;
 import org.example.serializers.AlertCustomKeySerde;
 import org.slf4j.Logger;
@@ -44,11 +43,11 @@ public class AlertCustomConsumer {
         consumingAttemptCounter = 0;
     }
     
-    public Optional consume(String topic) {
+    public Optional<Object[]> consume(String topic) {
         
         Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
@@ -68,7 +67,7 @@ public class AlertCustomConsumer {
         // consumer.seek(partitionOne, kaOffsetMap.get(partitionOne).offset());
         
         try (
-            KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties)) {
+            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
             //consumer.subscribe(List.of(topic));
             
             TopicPartition partitionZero = new TopicPartition(topic, 0);
@@ -77,14 +76,12 @@ public class AlertCustomConsumer {
             consumingAttemptCounter = 50;
             try {
                 while (consumingAttemptCounter > 0) {
-                    ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofMillis(250));
-                    for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
-                        LOGGER.info("kinaction_info offset={}, key={}, value={}", consumerRecord.offset(), consumerRecord.key(), consumerRecord.value());
-                        //LOGGER.info("kinaction_info value = {}", Double.parseDouble(consumerRecord.value()) * 1.543);
-                        
+                    ConsumerRecords<AlertCustom, String> consumerRecords = consumer.poll(Duration.ofMillis(250));
+                    for (ConsumerRecord<AlertCustom, String> consumerRecord : consumerRecords) {
+                        LOGGER.info("kinaction_info offset={}, key={}, value={}", consumerRecord.offset(), consumerRecord.key(),
+                            consumerRecord.value());
                         commitOffset(consumerRecord.offset(), consumerRecord.partition(), consumerRecord.topic(), consumer);
-                        
-                        return Optional.of(consumerRecord.value());
+                        return Optional.of(new Object[] { consumerRecord.key(), consumerRecord.value() });
                     }
                     Thread.sleep(100);
                     --consumingAttemptCounter;
@@ -97,7 +94,7 @@ public class AlertCustomConsumer {
         return Optional.empty();
     }
     
-    private static void commitOffset(long offset, int partition, String topic, KafkaConsumer<String, String> consumer) {
+    private static void commitOffset(long offset, int partition, String topic, KafkaConsumer<AlertCustom, String> consumer) {
         OffsetAndMetadata offsetMeta = new OffsetAndMetadata(++offset, "");
         Map<TopicPartition, OffsetAndMetadata> kaOffsetMap = new HashMap<>();
         kaOffsetMap.put(new TopicPartition(topic, partition), offsetMeta);

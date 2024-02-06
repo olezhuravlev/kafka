@@ -11,6 +11,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.example.components.partitioners.AlertCustomLevelPartitioner;
+import org.example.messages.AlertCustom;
+import org.example.serializers.AlertCustomKeySerde;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +28,9 @@ public class AlertCustomProducer {
     
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         AlertCustomProducer producer = new AlertCustomProducer();
-        producer.produce("kinaction_alertcustom", "Stage 1 stopped");
+        String message = "Stage 1 stopped";
+        AlertCustom testAlert = new AlertCustom(1, "Stage 1", AlertCustom.AlertLevel.CRITICAL, message);
+        producer.produce("kinaction_alertcustom", message, testAlert);
     }
     
     private static class AlertCustomCallback implements Callback {
@@ -41,21 +45,20 @@ public class AlertCustomProducer {
         }
     }
     
-    public void produce(String topic, String message) throws ExecutionException, InterruptedException {
+    public void produce(String topic, String message, AlertCustom alert) throws ExecutionException, InterruptedException {
         
         Properties properties = new Properties();
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomLevelPartitioner.class);
         
         try (
-            Producer<String, String> producer = new KafkaProducer<>(properties)) {
-            //AlertCustom alert = new AlertCustom(1, "Stage 1", AlertCustom.AlertLevel.CRITICAL, message);
-            ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic, message, message);
+            Producer<AlertCustom, String> producer = new KafkaProducer<>(properties)) {
+            ProducerRecord<AlertCustom, String> producerRecord = new ProducerRecord<>(topic, alert, message);
             RecordMetadata result = producer.send(producerRecord, new AlertCustomCallback()).get();
             if (result != null) {
-                LOGGER.info("kinaction_alertcustom offset = {}, topic = {}, timestamp = {}", result.offset(), result.topic(),
+                LOGGER.info("AlertCustomProducer: offset = {}, topic = {}, timestamp = {}", result.offset(), result.topic(),
                     result.timestamp());
             }
         }

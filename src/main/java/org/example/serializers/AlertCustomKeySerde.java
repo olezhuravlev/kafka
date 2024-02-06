@@ -1,6 +1,8 @@
 package org.example.serializers;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.kafka.common.serialization.Deserializer;
@@ -21,12 +23,31 @@ public class AlertCustomKeySerde implements Serializer<AlertCustom>, Deserialize
             return null;
         }
         
-        return key.getStageId().getBytes(StandardCharsets.UTF_8);
+        // We serialize only alertId (int - always 4 bytes) and message (the rest of the result byte array).
+        
+        int alertId = key.getAlertId();
+        byte[] alertIdByte = ByteBuffer.allocate(4).putInt(alertId).array();
+        
+        String alertMessage = key.getAlertMessage();
+        byte[] alertMessageByte = alertMessage.getBytes(StandardCharsets.UTF_8);
+        
+        byte[] data = Arrays.copyOf(alertIdByte, alertIdByte.length + alertMessageByte.length);
+        System.arraycopy(alertMessageByte, 0, data, alertIdByte.length, alertMessageByte.length);
+        
+        return data;
     }
     
     @Override
     public AlertCustom deserialize(String topic, byte[] data) {
-        return null;
+        
+        byte[] alertIdByte = Arrays.copyOf(data, 4);
+        int alertId = ByteBuffer.wrap(alertIdByte).getInt();
+        
+        byte[] alertMessageByte = Arrays.copyOfRange(data, 4, data.length);
+        String alertMessage = new String(alertMessageByte, StandardCharsets.UTF_8);
+        
+        AlertCustom alertCustom = new AlertCustom(alertId, "Stage 1", AlertCustom.AlertLevel.CRITICAL, alertMessage);
+        return alertCustom;
     }
     
     @Override
