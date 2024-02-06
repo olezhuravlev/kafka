@@ -11,8 +11,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.example.components.partitioners.AlertCustomLevelPartitioner;
-import org.example.messages.AlertCustom;
-import org.example.serializers.AlertCustomKeySerde;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,16 +43,16 @@ public class AlertCustomProducer {
     
     public void produce(String topic, String message) throws ExecutionException, InterruptedException {
         
-        Properties kaProperties = new Properties();
-        kaProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        kaProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
-        kaProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        kaProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomLevelPartitioner.class);
+        Properties properties = new Properties();
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomLevelPartitioner.class);
         
         try (
-            Producer<AlertCustom, String> producer = new KafkaProducer<>(kaProperties)) {
-            AlertCustom alert = new AlertCustom(1, "Stage 1", AlertCustom.AlertLevel.CRITICAL, message);
-            ProducerRecord<AlertCustom, String> producerRecord = new ProducerRecord<>(topic, alert, alert.getAlertMessage());
+            Producer<String, String> producer = new KafkaProducer<>(properties)) {
+            //AlertCustom alert = new AlertCustom(1, "Stage 1", AlertCustom.AlertLevel.CRITICAL, message);
+            ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic, message, message);
             RecordMetadata result = producer.send(producerRecord, new AlertCustomCallback()).get();
             if (result != null) {
                 LOGGER.info("kinaction_alertcustom offset = {}, topic = {}, timestamp = {}", result.offset(), result.topic(),

@@ -36,7 +36,7 @@ public class AlertCustomProducerConsumerTest {
     
     @BeforeAll
     public static void beforeAll() {
-        EmbeddedKafkaHolder.getEmbeddedKafkaBroker().addTopics("hat", "cat");
+        //EmbeddedKafkaHolder.getEmbeddedKafkaBroker().addTopics("hat", "cat");
     }
     
     @AfterAll

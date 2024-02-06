@@ -14,6 +14,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.example.messages.AlertCustom;
 import org.example.serializers.AlertCustomKeySerde;
 import org.slf4j.Logger;
@@ -45,14 +46,14 @@ public class AlertCustomConsumer {
     
     public Optional consume(String topic) {
         
-        Properties kaProperties = new Properties();
-        kaProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        kaProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
-        kaProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        Properties properties = new Properties();
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         
-        kaProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
-        kaProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
-        kaProperties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
+        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+        properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         
         // Reading from the beginning:
         // kaProperties.put("group.id", UUID.randomUUID().toString());
@@ -67,19 +68,19 @@ public class AlertCustomConsumer {
         // consumer.seek(partitionOne, kaOffsetMap.get(partitionOne).offset());
         
         try (
-            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(kaProperties)) {
-            consumer.subscribe(List.of(topic));
+            KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties)) {
+            //consumer.subscribe(List.of(topic));
             
-            //TopicPartition partitionZero = new TopicPartition(topic, 0);
-            //consumer.assign(List.of(partitionZero));
+            TopicPartition partitionZero = new TopicPartition(topic, 0);
+            consumer.assign(List.of(partitionZero));
             
             consumingAttemptCounter = 50;
             try {
                 while (consumingAttemptCounter > 0) {
-                    ConsumerRecords<AlertCustom, String> consumerRecords = consumer.poll(Duration.ofMillis(250));
-                    for (ConsumerRecord<AlertCustom, String> consumerRecord : consumerRecords) {
-                        LOGGER.info("kinaction_info offset = {}, key = {}", consumerRecord.offset(), consumerRecord.key());
-                        LOGGER.info("kina`ction_info value = {}", Double.parseDouble(consumerRecord.value()) * 1.543);
+                    ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofMillis(250));
+                    for (ConsumerRecord<String, String> consumerRecord : consumerRecords) {
+                        LOGGER.info("kinaction_info offset={}, key={}, value={}", consumerRecord.offset(), consumerRecord.key(), consumerRecord.value());
+                        //LOGGER.info("kinaction_info value = {}", Double.parseDouble(consumerRecord.value()) * 1.543);
                         
                         commitOffset(consumerRecord.offset(), consumerRecord.partition(), consumerRecord.topic(), consumer);
                         
@@ -96,7 +97,7 @@ public class AlertCustomConsumer {
         return Optional.empty();
     }
     
-    private static void commitOffset(long offset, int partition, String topic, KafkaConsumer<AlertCustom, String> consumer) {
+    private static void commitOffset(long offset, int partition, String topic, KafkaConsumer<String, String> consumer) {
         OffsetAndMetadata offsetMeta = new OffsetAndMetadata(++offset, "");
         Map<TopicPartition, OffsetAndMetadata> kaOffsetMap = new HashMap<>();
         kaOffsetMap.put(new TopicPartition(topic, partition), offsetMeta);
