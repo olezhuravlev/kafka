@@ -1,6 +1,7 @@
 package org.example.components.consumers;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +100,46 @@ public class AlertCustomConsumer {
         }
         
         return Optional.empty();
+    }
+    
+    public List<Object[]> consumeRecordsAutoCommit(String topic, Properties properties) {
+        
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+        properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
+        
+        List<Object[]> results = new ArrayList<>();
+        
+        try (
+            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
+            
+            // Assign partition to consumer bypassing the group coordinator.
+            TopicPartition partitionZero = new TopicPartition(topic, 0);
+            consumer.assign(List.of(partitionZero));
+            
+            consumingAttemptCounter = 10;
+            try {
+                while (consumingAttemptCounter > 0) {
+                    ConsumerRecords<AlertCustom, String> consumerRecords = consumer.poll(Duration.ofMillis(250));
+                    if (consumerRecords.isEmpty()) {
+                        --consumingAttemptCounter;
+                        Thread.sleep(100);
+                        continue;
+                    }
+                    for (ConsumerRecord<AlertCustom, String> consumerRecord : consumerRecords) {
+                        results.add(new Object[] { consumerRecord.key(), consumerRecord.value() });
+                    }
+                    consumingAttemptCounter = 10;
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
+        return results;
     }
     
     public Optional<Object[]> consumeCommitSync(String topic) {

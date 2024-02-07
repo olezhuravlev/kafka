@@ -1,5 +1,7 @@
 package org.example.components.producers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -70,6 +72,30 @@ public class AlertCustomProducer {
             // producer.flush();
             // producer.close();
         }
+    }
+    
+    public List<RecordMetadata> produce(List<ProducerRecord<AlertCustom, String>> producerRecords)
+        throws ExecutionException, InterruptedException {
+        
+        List<RecordMetadata> results = new ArrayList<>();
+        
+        Properties properties = new Properties();
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomPartitioner.class);
+        
+        try (
+            Producer<AlertCustom, String> producer = new KafkaProducer<>(properties)) {
+            for (ProducerRecord<AlertCustom, String> producerRecord : producerRecords) {
+                RecordMetadata result = producer.send(producerRecord, new AlertCustomCallback()).get();
+                if (result != null) {
+                    results.add(result);
+                }
+            }
+        }
+        
+        return results;
     }
     
     public static void dropCallbackInvoked() {
