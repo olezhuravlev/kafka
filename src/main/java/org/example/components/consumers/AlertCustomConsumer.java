@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -75,6 +76,7 @@ public class AlertCustomConsumer {
             KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
             //consumer.subscribe(List.of(topic));
             
+            // Assign partition to consumer bypassing the group coordinator.
             TopicPartition partitionZero = new TopicPartition(topic, 0);
             consumer.assign(List.of(partitionZero));
             
@@ -113,6 +115,7 @@ public class AlertCustomConsumer {
             KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
             //consumer.subscribe(List.of(topic));
             
+            // Assign partition to consumer bypassing the group coordinator.
             TopicPartition partitionZero = new TopicPartition(topic, 0);
             consumer.assign(List.of(partitionZero));
             
@@ -137,7 +140,18 @@ public class AlertCustomConsumer {
         return Optional.empty();
     }
     
-    public Optional<Object[]> consumeCommitAsync(String topic) {
+    private static void commitOffsetSync(long offset, int partition, String topic, KafkaConsumer<AlertCustom, String> consumer) {
+        
+        // Metadata defines offset to fix.
+        OffsetAndMetadata offsetMeta = new OffsetAndMetadata(++offset, "");
+        
+        Map<TopicPartition, OffsetAndMetadata> offsetMap = new HashMap<>();
+        offsetMap.put(new TopicPartition(topic, partition), offsetMeta);
+        
+        consumer.commitSync(offsetMap);
+    }
+    
+    public void consumeCommitAsync(String topic, Consumer<ConsumerRecord<AlertCustom, String>> callback) {
         
         Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -151,11 +165,9 @@ public class AlertCustomConsumer {
             KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
             //consumer.subscribe(List.of(topic));
             
-            TopicPartition partition0 = new TopicPartition(topic, 0);
-            //TopicPartition partition1 = new TopicPartition(topic, 1);
-            //TopicPartition partition2 = new TopicPartition(topic, 2);
-            List<TopicPartition> topics = List.of(partition0 /*, partition1, partition2*/);
-            consumer.assign(topics);
+            // Assign partition to consumer bypassing the group coordinator.
+            TopicPartition partitionZero = new TopicPartition(topic, 0);
+            consumer.assign(List.of(partitionZero));
             
             consumingAttemptCounter = 50;
             try {
@@ -164,8 +176,7 @@ public class AlertCustomConsumer {
                     for (ConsumerRecord<AlertCustom, String> consumerRecord : consumerRecords) {
                         LOGGER.info("+++ AlertCustomConsumer: consumeCommitAsync: offset={}, key={}, value={}", consumerRecord.offset(),
                             consumerRecord.key(), consumerRecord.value());
-                        commitOffsetAsync(consumerRecord.offset(), consumerRecord.partition(), topics, consumer);
-                        //return Optional.of(new Object[] { consumerRecord.key(), consumerRecord.value() });
+                        commitOffsetAsync(consumerRecord, topic, consumer, callback);
                     }
                     Thread.sleep(100);
                     --consumingAttemptCounter;
@@ -174,11 +185,13 @@ public class AlertCustomConsumer {
                 throw new RuntimeException(e);
             }
         }
-        
-        return Optional.empty();
     }
     
-    private static void commitOffsetSync(long offset, int partition, String topic, KafkaConsumer<AlertCustom, String> consumer) {
+    private void commitOffsetAsync(ConsumerRecord<AlertCustom, String> consumerRecord, String topic,
+        KafkaConsumer<AlertCustom, String> consumer, Consumer<ConsumerRecord<AlertCustom, String>> callback) {
+        
+        long offset = consumerRecord.offset();
+        int partition = consumerRecord.partition();
         
         // Metadata defines offset to fix.
         OffsetAndMetadata offsetMeta = new OffsetAndMetadata(++offset, "");
@@ -186,33 +199,18 @@ public class AlertCustomConsumer {
         Map<TopicPartition, OffsetAndMetadata> offsetMap = new HashMap<>();
         offsetMap.put(new TopicPartition(topic, partition), offsetMeta);
         
-        consumer.commitSync(offsetMap);
-    }
-    
-    private static void commitOffsetAsync(long offset, int partition, List<TopicPartition> topics,
-        KafkaConsumer<AlertCustom, String> consumer) {
-        
-        // Metadata defines offset to fix.
-        OffsetAndMetadata offsetMeta = new OffsetAndMetadata(++offset, "");
-        
-        Map<TopicPartition, OffsetAndMetadata> offsetMap = new HashMap<>();
-        //offsetMap.put(new TopicPartition(topic, partition), offsetMeta);
-        for (TopicPartition currentTopic : topics) {
-            offsetMap.put(currentTopic, offsetMeta);
-        }
-        
-        consumer.commitAsync(offsetMap, AlertCustomConsumer::onComplete);
-    }
-    
-    private static void onComplete(Map<TopicPartition, OffsetAndMetadata> map, Exception e) {
-        callbackInvoked = true;
-        if (e == null) {
-            for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : map.entrySet()) {
-                LOGGER.info("+++ AlertCustomConsumer: offset {}", entry.getValue().offset());
+        consumer.commitAsync(offsetMap, (map, e) -> {
+            callbackInvoked = true;
+            if (e == null) {
+                for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : map.entrySet()) {
+                    LOGGER.info("+++ AlertCustomConsumer: offset {}", entry.getValue().offset());
+                }
+                callback.accept(consumerRecord);
+            } else {
+                LOGGER.info("+++ AlertCustomConsumer: Exception {}", e.getLocalizedMessage());
+                callback.accept(null);
             }
-        } else {
-            LOGGER.info("+++ AlertCustomConsumer: Exception {}", e.getLocalizedMessage());
-        }
+        });
     }
     
     public static void dropCallbackInvoked() {

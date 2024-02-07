@@ -161,18 +161,20 @@ public class AlertCustomProducerConsumerTest implements ApplicationContextAware 
         AlertCustomConsumer alertCustomConsumer6 = getConsumerLookup();
         
         // Payload 1.
-        Optional<Object[]> payload = alertCustomConsumer.consumeCommitAsync(topic);
-//        assertThat("Payload must be not empty!", payload.isPresent(), is(true));
-//
-//        Object[] result = payload.get();
-//        assertThat("First value of payload must be AlertCustom!", result[0], instanceOf(AlertCustom.class));
-//        assertThat("Second value of payload must be String!", result[1], instanceOf(String.class));
-//
-//        assertThat("Key of Payload must be equal to test alert!", result[0], equalTo(testAlert));
-//        assertThat("Value of Payload must be equal to test message!", result[1], equalTo(testMessage));
-        
-        assertThat("Consumer callback must be invoked!", AlertCustomConsumer.isCallbackInvoked(), equalTo(true));
-        assertThat("Producer callback must be invoked!", AlertCustomProducer.isCallbackInvoked(), equalTo(true));
+        alertCustomConsumer.consumeCommitAsync(topic, consumerRecord -> {
+            
+            Optional<Object[]> payload = Optional.of(new Object[] { consumerRecord.key(), consumerRecord.value() });
+            assertThat("Payload must be not empty!", payload.isPresent(), is(true));
+            
+            Object[] result = payload.get();
+            assertThat("First value of payload must be AlertCustom!", result[0], instanceOf(AlertCustom.class));
+            assertThat("Second value of payload must be String!", result[1], instanceOf(String.class));
+            
+            assertThat("Key of Payload must be equal to test alert!", result[0], equalTo(testAlert));
+            assertThat("Value of Payload must be equal to test message!", result[1], equalTo(testMessage));
+            assertThat("Consumer callback must be invoked!", AlertCustomConsumer.isCallbackInvoked(), equalTo(true));
+            assertThat("Producer callback must be invoked!", AlertCustomProducer.isCallbackInvoked(), equalTo(true));
+        });
     }
     
     @Test
