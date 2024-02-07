@@ -34,7 +34,10 @@ public class AlertCustomProducerConsumerTest {
     private AlertCustomProducer alertCustomProducer;
     
     @Autowired
-    private AlertCustomConsumer alertCustomConsumer;
+    private AlertCustomConsumer alertCustomConsumer1;
+    
+    @Autowired
+    private AlertCustomConsumer alertCustomConsumer2;
     
     @BeforeAll
     public static void beforeAll() {
@@ -64,7 +67,7 @@ public class AlertCustomProducerConsumerTest {
         }).start();
         
         // Payload 1.
-        Optional<Object[]> payload = alertCustomConsumer.consumeAutoCommit(topic);
+        Optional<Object[]> payload = alertCustomConsumer1.consumeAutoCommit(topic);
         assertThat("Payload must be not empty!", payload.isPresent(), is(true));
         
         Object[] result = payload.get();
@@ -93,7 +96,7 @@ public class AlertCustomProducerConsumerTest {
         }).start();
         
         // Payload 1.
-        Optional<Object[]> payload = alertCustomConsumer.consumeCommitAsync(topic);
+        Optional<Object[]> payload = alertCustomConsumer1.consumeCommitAsync(topic);
         assertThat("Payload must be not empty!", payload.isPresent(), is(true));
         
         Object[] result = payload.get();
@@ -102,5 +105,22 @@ public class AlertCustomProducerConsumerTest {
         
         assertThat("Key of Payload must be equal to test alert!", result[0], equalTo(testAlert));
         assertThat("Value of Payload must be equal to test message!", result[1], equalTo(testMessage));
+        
+        assertThat("Consumer callback must be invoked!", AlertCustomConsumer.isCallbackInvoked(), equalTo(true));
+        
+        assertThat("Receiver callback must be invoked!", AlertCustomProducer.isCallbackInvoked(), equalTo(true));
+    }
+    
+    @Test
+    void ackTest() {
+        
+        // Strict sequential dispatch.
+        // RecordMetadata result = producer.send(producerRecord).get(); // Wait for the responce!
+        // producer.close();
+        
+        // Properties properties = new Properties();
+        // properties.put("acks", "all");
+        // properties.put("retries", "3");
+        // properties.put("max.in.flight.requests.per.connection", "1");
     }
 }

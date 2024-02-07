@@ -19,9 +19,11 @@ import org.example.serializers.AlertCustomKeySerde;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Component
+@Scope("prototype")
 public class AlertCustomConsumer {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(AlertCustomConsumer.class);
@@ -30,6 +32,8 @@ public class AlertCustomConsumer {
     private String bootstrapServers;
     
     private int consumingAttemptCounter;
+    
+    private static boolean callbackInvoked;
     
     public static void main(String[] args) {
         
@@ -153,6 +157,7 @@ public class AlertCustomConsumer {
     }
     
     private static void onComplete(Map<TopicPartition, OffsetAndMetadata> map, Exception e) {
+        callbackInvoked = true;
         if (e == null) {
             for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : map.entrySet()) {
                 LOGGER.info("+++ AlertCustomConsumer: offset {}", entry.getValue().offset());
@@ -160,5 +165,9 @@ public class AlertCustomConsumer {
         } else {
             LOGGER.info("+++ AlertCustomConsumer: Exception {}", e.getLocalizedMessage());
         }
+    }
+    
+    public static boolean isCallbackInvoked() {
+        return callbackInvoked;
     }
 }

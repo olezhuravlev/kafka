@@ -5,7 +5,7 @@ import java.util.Map;
 import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.common.Cluster;
 
-public class AlertCustomLevelPartitioner implements Partitioner {
+public class AlertCustomPartitioner implements Partitioner {
     
     @Override
     public void configure(Map<String, ?> configs) {

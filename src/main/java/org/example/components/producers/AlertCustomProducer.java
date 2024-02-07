@@ -10,7 +10,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.example.components.partitioners.AlertCustomLevelPartitioner;
+import org.example.components.partitioners.AlertCustomPartitioner;
 import org.example.messages.AlertCustom;
 import org.example.serializers.AlertCustomKeySerde;
 import org.slf4j.Logger;
@@ -26,6 +26,8 @@ public class AlertCustomProducer {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
     
+    private static boolean callbackInvoked;
+    
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         AlertCustomProducer producer = new AlertCustomProducer();
         String message = "Stage 1 stopped";
@@ -36,6 +38,7 @@ public class AlertCustomProducer {
     private static class AlertCustomCallback implements Callback {
         @Override
         public void onCompletion(RecordMetadata metadata, Exception exception) {
+            callbackInvoked = true;
             if (exception != null) {
                 LOGGER.error("+++ AlertCustomProducer: Exception: ", exception);
             } else if (metadata != null) {
@@ -51,7 +54,8 @@ public class AlertCustomProducer {
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomLevelPartitioner.class);
+        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomPartitioner.class);
+        // properties.put(ProducerConfig.ACKS_CONFIG, "all");
         
         try (
             Producer<AlertCustom, String> producer = new KafkaProducer<>(properties)) {
@@ -61,6 +65,12 @@ public class AlertCustomProducer {
                 LOGGER.info("AlertCustomProducer: offset = {}, topic = {}, timestamp = {}", result.offset(), result.topic(),
                     result.timestamp());
             }
+            // producer.flush();
+            // producer.close();
         }
+    }
+    
+    public static boolean isCallbackInvoked() {
+        return callbackInvoked;
     }
 }
