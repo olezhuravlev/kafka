@@ -16,9 +16,11 @@ import org.example.serializers.AlertCustomKeySerde;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Component
+@Scope("prototype")
 public class AlertCustomProducer {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(AlertCustomProducer.class);
@@ -68,6 +70,10 @@ public class AlertCustomProducer {
             // producer.flush();
             // producer.close();
         }
+    }
+    
+    public static void dropCallbackInvoked() {
+        callbackInvoked = false;
     }
     
     public static boolean isCallbackInvoked() {
