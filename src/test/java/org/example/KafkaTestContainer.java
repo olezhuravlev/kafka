@@ -19,7 +19,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -49,9 +48,6 @@ public class KafkaTestContainer {
     
     @Autowired
     private KafkaProducer kafkaProducer;
-    
-    @Value("${topic}")
-    private String testTopic;
     
     @BeforeAll
     public static final void beforeAll() {
@@ -114,8 +110,9 @@ public class KafkaTestContainer {
     @Test
     public void kafkaProducerConsumer() throws Exception {
         
+        String topic = "kafkaProducerConsumer";
         String data = "Sending with our own simple KafkaProducer";
-        kafkaProducer.send(testTopic, data);
+        kafkaProducer.send(topic, data);
         
         kafkaConsumer.getLatch().await(10, TimeUnit.SECONDS);
         assertThat(kafkaConsumer.getPayload(), containsString(data));

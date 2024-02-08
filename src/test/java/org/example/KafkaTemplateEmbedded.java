@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -24,9 +23,6 @@ import org.springframework.test.annotation.DirtiesContext;
 @EmbeddedKafka
 @DirtiesContext
 public class KafkaTemplateEmbedded {
-    
-    @Value(value = "${topic}")
-    private String topic;
     
     @Autowired
     @Qualifier("kafkaTemplate")
@@ -49,6 +45,7 @@ public class KafkaTemplateEmbedded {
     @Test
     void kafkaTemplateStringTest() {
         
+        String topic = "kafkaTemplateStringTest";
         String message = "Test string message";
         
         CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(topic, message);
@@ -62,6 +59,7 @@ public class KafkaTemplateEmbedded {
     @Test
     void kafkaTemplateGreetingTest() {
         
+        String topic = "kafkaTemplateGreetingTest";
         Greeting greeting = new Greeting("Greetings!", "Hello world!");
         
         CompletableFuture<SendResult<String, Greeting>> future = greetingKafkaTemplate.send(topic, greeting);

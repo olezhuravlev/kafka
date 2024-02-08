@@ -64,17 +64,17 @@ public class AlertCustomConsumer {
     
     public Optional<Object[]> consumeAutoCommit(String topic) {
         
-        Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
-        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
+        Properties defaultProperties = new Properties();
+        defaultProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        defaultProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        defaultProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        defaultProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
         
-        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
-        properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
+        defaultProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+        defaultProperties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         
         try (
-            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
+            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(defaultProperties)) {
             //consumer.subscribe(List.of(topic));
             
             // Assign partition to consumer bypassing the group coordinator.
@@ -104,17 +104,21 @@ public class AlertCustomConsumer {
     
     public List<Object[]> consumeRecordsAutoCommit(String topic, Properties properties) {
         
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
-        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        Properties defaultProperties = new Properties();
         
-        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
-        properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
+        defaultProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        defaultProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        defaultProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        
+        // Override default properties with provided ones.
+        for (Map.Entry entry : properties.entrySet()) {
+            defaultProperties.put(entry.getKey(), entry.getValue());
+        }
         
         List<Object[]> results = new ArrayList<>();
         
         try (
-            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
+            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(defaultProperties)) {
             
             // Assign partition to consumer bypassing the group coordinator.
             TopicPartition partitionZero = new TopicPartition(topic, 0);
@@ -144,16 +148,16 @@ public class AlertCustomConsumer {
     
     public Optional<Object[]> consumeCommitSync(String topic) {
         
-        Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
-        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
+        Properties defaultProperties = new Properties();
+        defaultProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        defaultProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        defaultProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        defaultProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
         
-        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"); // "Not less than once" semantics.
+        defaultProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"); // "Not less than once" semantics.
         
         try (
-            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
+            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(defaultProperties)) {
             //consumer.subscribe(List.of(topic));
             
             // Assign partition to consumer bypassing the group coordinator.
@@ -194,16 +198,16 @@ public class AlertCustomConsumer {
     
     public void consumeCommitAsync(String topic, Consumer<ConsumerRecord<AlertCustom, String>> callback) {
         
-        Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
-        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
+        Properties defaultProperties = new Properties();
+        defaultProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        defaultProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        defaultProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        defaultProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "kinaction_webconsumer");
         
-        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"); // "Not less than once" semantics.
+        defaultProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"); // "Not less than once" semantics.
         
         try (
-            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(properties)) {
+            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(defaultProperties)) {
             //consumer.subscribe(List.of(topic));
             
             // Assign partition to consumer bypassing the group coordinator.

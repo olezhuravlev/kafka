@@ -66,7 +66,7 @@ public class AlertCustomProducer {
             ProducerRecord<AlertCustom, String> producerRecord = new ProducerRecord<>(topic, alert, message);
             RecordMetadata result = producer.send(producerRecord, new AlertCustomCallback()).get();
             if (result != null) {
-                LOGGER.info("AlertCustomProducer: offset = {}, topic = {}, timestamp = {}", result.offset(), result.topic(),
+                LOGGER.info("+++ AlertCustomProducer: offset = {}, topic = {}, timestamp = {}", result.offset(), result.topic(),
                     result.timestamp());
             }
             // producer.flush();

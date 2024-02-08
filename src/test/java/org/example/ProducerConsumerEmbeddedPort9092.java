@@ -10,7 +10,6 @@ import org.example.components.producers.KafkaProducer;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
@@ -27,14 +26,12 @@ public class ProducerConsumerEmbeddedPort9092 {
     @Autowired
     private KafkaProducer kafkaProducer;
     
-    @Value("${topic}")
-    private String testTopic;
-    
     @Test
     public void kafkaProducerConsumerTest() throws Exception {
         
+        String topic = "kafkaProducerConsumerTest";
         String data = "Sending with our own simple KafkaProducer";
-        kafkaProducer.send(testTopic, data);
+        kafkaProducer.send(topic, data);
         
         kafkaConsumer.getLatch().await(10, TimeUnit.SECONDS);
         assertThat(kafkaConsumer.getPayload(), containsString(data));

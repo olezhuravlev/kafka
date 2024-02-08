@@ -13,7 +13,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -32,8 +31,6 @@ import org.springframework.test.annotation.DirtiesContext;
 @DirtiesContext
 public class KafkaTemplateEmbeddedPort9092 {
     
-    private final static String TEST_TOPIC = "templateTopic";
-    
     @Test
     public void test(EmbeddedKafkaBroker broker) {
         String brokerList = broker.getBrokersAsString(); // localhost:42789
@@ -43,6 +40,8 @@ public class KafkaTemplateEmbeddedPort9092 {
     @Test
     public void testTemplate(EmbeddedKafkaBroker broker) throws Exception {
         
+        String topic = "testTemplate";
+        
         //String brokerList = broker.getBrokersAsString(); // localhost:42789
         //broker.addTopics(TEST_TOPIC);
         //broker.afterPropertiesSet();
@@ -51,7 +50,7 @@ public class KafkaTemplateEmbeddedPort9092 {
         
         Map<String, Object> consumerProps = KafkaTestUtils.consumerProps("testGroup", "true", broker);
         DefaultKafkaConsumerFactory<Integer, String> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps);
-        ContainerProperties containerProperties = new ContainerProperties(TEST_TOPIC);
+        ContainerProperties containerProperties = new ContainerProperties(topic);
         KafkaMessageListenerContainer<Integer, String> container = new KafkaMessageListenerContainer<>(consumerFactory,
             containerProperties);
         final BlockingQueue<ConsumerRecord<Integer, String>> records = new LinkedBlockingQueue<>();
@@ -72,7 +71,7 @@ public class KafkaTemplateEmbeddedPort9092 {
         ProducerFactory<Integer, String> producerFactory = new DefaultKafkaProducerFactory<>(producerProps);
         
         KafkaTemplate<Integer, String> template = new KafkaTemplate<>(producerFactory);
-        template.setDefaultTopic(TEST_TOPIC);
+        template.setDefaultTopic(topic);
         template.sendDefault("foo");
         assertThat(records.poll(10, TimeUnit.SECONDS), hasValue("foo"));
         
@@ -82,7 +81,7 @@ public class KafkaTemplateEmbeddedPort9092 {
         assertThat(received, hasKey(2));
         assertThat(received, hasValue("bar"));
         
-        template.send(TEST_TOPIC, 0, 2, "baz");
+        template.send(topic, 0, 2, "baz");
         received = records.poll(10, TimeUnit.SECONDS);
         assertThat(received, hasPartition(0));
         assertThat(received, hasKey(2));
