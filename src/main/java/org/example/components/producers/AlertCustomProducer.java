@@ -2,6 +2,7 @@ package org.example.components.producers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -54,15 +55,15 @@ public class AlertCustomProducer {
     
     public void produce(String topic, String message, AlertCustom alert) throws ExecutionException, InterruptedException {
         
-        Properties properties = new Properties();
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
-        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomPartitioner.class);
-        // properties.put(ProducerConfig.ACKS_CONFIG, "all");
+        Properties appliedProperties = new Properties();
+        appliedProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        appliedProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        appliedProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        appliedProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomPartitioner.class);
+        // appliedProperties.put(ProducerConfig.ACKS_CONFIG, "all");
         
         try (
-            Producer<AlertCustom, String> producer = new KafkaProducer<>(properties)) {
+            Producer<AlertCustom, String> producer = new KafkaProducer<>(appliedProperties)) {
             ProducerRecord<AlertCustom, String> producerRecord = new ProducerRecord<>(topic, alert, message);
             RecordMetadata result = producer.send(producerRecord, new AlertCustomCallback()).get();
             if (result != null) {
@@ -79,14 +80,43 @@ public class AlertCustomProducer {
         
         List<RecordMetadata> results = new ArrayList<>();
         
-        Properties properties = new Properties();
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
-        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomPartitioner.class);
+        Properties appliedProperties = new Properties();
+        appliedProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        appliedProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        appliedProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        appliedProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomPartitioner.class);
         
         try (
-            Producer<AlertCustom, String> producer = new KafkaProducer<>(properties)) {
+            Producer<AlertCustom, String> producer = new KafkaProducer<>(appliedProperties)) {
+            for (ProducerRecord<AlertCustom, String> producerRecord : producerRecords) {
+                RecordMetadata result = producer.send(producerRecord, new AlertCustomCallback()).get();
+                if (result != null) {
+                    results.add(result);
+                }
+            }
+        }
+        
+        return results;
+    }
+    
+    public List<RecordMetadata> produce(List<ProducerRecord<AlertCustom, String>> producerRecords, Properties properties)
+        throws ExecutionException, InterruptedException {
+        
+        List<RecordMetadata> results = new ArrayList<>();
+        
+        Properties appliedProperties = new Properties();
+        appliedProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        appliedProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        appliedProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        appliedProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomPartitioner.class);
+        
+        // Override default properties with provided ones.
+        for (Map.Entry entry : properties.entrySet()) {
+            appliedProperties.put(entry.getKey(), entry.getValue());
+        }
+        
+        try (
+            Producer<AlertCustom, String> producer = new KafkaProducer<>(appliedProperties)) {
             for (ProducerRecord<AlertCustom, String> producerRecord : producerRecords) {
                 RecordMetadata result = producer.send(producerRecord, new AlertCustomCallback()).get();
                 if (result != null) {

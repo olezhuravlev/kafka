@@ -421,20 +421,6 @@ public class AlertCustomProducerConsumerTest implements ApplicationContextAware 
         // groupId => Topic:Partition (Leading Replica):Offset
     }
     
-    @Test
-    @DirtiesContext
-    @Disabled
-    void moreConsumersThanPartitionsTest() {
-        // One consumer must not have messages received.
-    }
-    
-    @Test
-    @DirtiesContext
-    @Disabled
-    void morePartitionsThenConsumersTest() {
-        // One consumer must receive more messages than others.
-    }
-    
     //////////////////////////////////////////////////////
     // SERVICE FUNCTIONS
     private AlertCustomProducer getProducer() {
