@@ -74,6 +74,9 @@ public class AlertCustomProducerConsumerPartitionsTest implements ApplicationCon
         CountDownLatch consumersCountDownLatch = new CountDownLatch(1);
         CountDownLatch resultCountDownLatch = new CountDownLatch(6);
         
+        ////////////////////////////////////////////////////////////////////////////////
+        // PRODUCING
+        
         List<ProducerRecord<AlertCustom, String>> producerRecords1 = getProducerRecordsNumberedMessages(TEST_TOPIC);
         List<ProducerRecord<AlertCustom, String>> producerRecords2 = getProducerRecordsNumberedMessages(TEST_TOPIC);
         
@@ -104,6 +107,9 @@ public class AlertCustomProducerConsumerPartitionsTest implements ApplicationCon
         
         Thread.sleep(1000);
         
+        ////////////////////////////////////////////////////////////////////////////////
+        // CONSUMING
+        
         Properties consumerProperties = new Properties();
         String groupId1 = UUID.randomUUID().toString();
         consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId1);
@@ -113,78 +119,78 @@ public class AlertCustomProducerConsumerPartitionsTest implements ApplicationCon
         consumerProperties.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, RangeAssignor.class.getName());
         //consumerProperties.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, RoundRobinAssignor.class.getName());
         
-        List<Object[]> results_0_1 = new ArrayList<>();
+        List<Object[]> results_1 = new ArrayList<>();
         new Thread(() -> {
             try {
                 AlertCustomConsumer alertCustomConsumer1 = getConsumer();
                 consumersCountDownLatch.await();
                 List<Object[]> results = alertCustomConsumer1.consumeAutoCommitDynamicPartitions(TEST_TOPIC, consumerProperties);
-                results_0_1.addAll(results);
+                results_1.addAll(results);
                 resultCountDownLatch.countDown();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }).start();
         
-        List<Object[]> results_0_2 = new ArrayList<>();
+        List<Object[]> results_2 = new ArrayList<>();
         new Thread(() -> {
             try {
                 AlertCustomConsumer alertCustomConsumer1 = getConsumer();
                 consumersCountDownLatch.await();
                 List<Object[]> results = alertCustomConsumer1.consumeAutoCommitDynamicPartitions(TEST_TOPIC, consumerProperties);
-                results_0_2.addAll(results);
+                results_2.addAll(results);
                 resultCountDownLatch.countDown();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }).start();
         
-        List<Object[]> results_1_1 = new ArrayList<>();
+        List<Object[]> results_3 = new ArrayList<>();
         new Thread(() -> {
             try {
                 AlertCustomConsumer alertCustomConsumer2 = getConsumer();
                 consumersCountDownLatch.await();
                 List<Object[]> results = alertCustomConsumer2.consumeAutoCommitDynamicPartitions(TEST_TOPIC, consumerProperties);
-                results_1_1.addAll(results);
+                results_3.addAll(results);
                 resultCountDownLatch.countDown();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }).start();
         
-        List<Object[]> results_1_2 = new ArrayList<>();
+        List<Object[]> results_4 = new ArrayList<>();
         new Thread(() -> {
             try {
                 AlertCustomConsumer alertCustomConsumer2 = getConsumer();
                 consumersCountDownLatch.await();
                 List<Object[]> results = alertCustomConsumer2.consumeAutoCommitDynamicPartitions(TEST_TOPIC, consumerProperties);
-                results_1_2.addAll(results);
+                results_4.addAll(results);
                 resultCountDownLatch.countDown();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }).start();
         
-        List<Object[]> results_2_1 = new ArrayList<>();
+        List<Object[]> results_5 = new ArrayList<>();
         new Thread(() -> {
             try {
                 AlertCustomConsumer alertCustomConsumer3 = getConsumer();
                 consumersCountDownLatch.await();
                 List<Object[]> results = alertCustomConsumer3.consumeAutoCommitDynamicPartitions(TEST_TOPIC, consumerProperties);
-                results_2_1.addAll(results);
+                results_5.addAll(results);
                 resultCountDownLatch.countDown();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }).start();
         
-        List<Object[]> results_2_2 = new ArrayList<>();
+        List<Object[]> results_6 = new ArrayList<>();
         new Thread(() -> {
             try {
                 AlertCustomConsumer alertCustomConsumer3 = getConsumer();
                 consumersCountDownLatch.await();
                 List<Object[]> results = alertCustomConsumer3.consumeAutoCommitDynamicPartitions(TEST_TOPIC, consumerProperties);
-                results_2_2.addAll(results);
+                results_6.addAll(results);
                 resultCountDownLatch.countDown();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -196,26 +202,26 @@ public class AlertCustomProducerConsumerPartitionsTest implements ApplicationCon
         consumersCountDownLatch.countDown();
         resultCountDownLatch.await();
         assertThat("Results must have the save amount of records as the sources!",
-            results_0_1.size() + results_0_2.size() + results_1_1.size() + results_1_2.size() + results_2_1.size() + results_2_2.size(),
+            results_1.size() + results_2.size() + results_3.size() + results_4.size() + results_5.size() + results_6.size(),
             is(producerRecords1.size() + producerRecords2.size()));
         
         int emptyCollectionsCounter = 0;
-        if (results_0_1.isEmpty()) {
+        if (results_1.isEmpty()) {
             ++emptyCollectionsCounter;
         }
-        if (results_0_2.isEmpty()) {
+        if (results_2.isEmpty()) {
             ++emptyCollectionsCounter;
         }
-        if (results_1_1.isEmpty()) {
+        if (results_3.isEmpty()) {
             ++emptyCollectionsCounter;
         }
-        if (results_1_2.isEmpty()) {
+        if (results_4.isEmpty()) {
             ++emptyCollectionsCounter;
         }
-        if (results_2_1.isEmpty()) {
+        if (results_5.isEmpty()) {
             ++emptyCollectionsCounter;
         }
-        if (results_2_2.isEmpty()) {
+        if (results_6.isEmpty()) {
             ++emptyCollectionsCounter;
         }
         assertThat("At least half of collections must be empty!", emptyCollectionsCounter, greaterThanOrEqualTo(3));
@@ -223,10 +229,95 @@ public class AlertCustomProducerConsumerPartitionsTest implements ApplicationCon
     
     @Test
     @DirtiesContext
-    @Disabled
-    void morePartitionsThenConsumersTest() {
+    void morePartitionsThenConsumersTest() throws InterruptedException {
         
         // Some consumers receive more messages than others.
+        
+        CountDownLatch consumersCountDownLatch = new CountDownLatch(1);
+        CountDownLatch resultCountDownLatch = new CountDownLatch(2);
+        
+        ////////////////////////////////////////////////////////////////////////////////
+        // PRODUCING
+        
+        List<ProducerRecord<AlertCustom, String>> producerRecords1 = getProducerRecordsNumberedMessages(TEST_TOPIC);
+        List<ProducerRecord<AlertCustom, String>> producerRecords2 = getProducerRecordsNumberedMessages(TEST_TOPIC);
+        
+        Properties producerProperties = new Properties();
+        producerProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomTopicNumberPartitioner.class);
+        
+        new Thread(() -> {
+            try {
+                AlertCustomProducer alertCustomProducer1 = getProducer();
+                alertCustomProducer1.produce(producerRecords1, producerProperties);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+        
+        new Thread(() -> {
+            try {
+                AlertCustomProducer alertCustomProducer2 = getProducer();
+                alertCustomProducer2.produce(producerRecords2, producerProperties);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+        
+        Thread.sleep(1000);
+        
+        ////////////////////////////////////////////////////////////////////////////////
+        // CONSUMING
+        
+        Properties consumerProperties = new Properties();
+        String groupId1 = UUID.randomUUID().toString();
+        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId1);
+        consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        consumerProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+        consumerProperties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
+        consumerProperties.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, RangeAssignor.class.getName());
+        //consumerProperties.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, RoundRobinAssignor.class.getName());
+        
+        List<Object[]> results_1 = new ArrayList<>();
+        new Thread(() -> {
+            try {
+                AlertCustomConsumer alertCustomConsumer1 = getConsumer();
+                consumersCountDownLatch.await();
+                List<Object[]> results = alertCustomConsumer1.consumeAutoCommitDynamicPartitions(TEST_TOPIC, consumerProperties);
+                results_1.addAll(results);
+                resultCountDownLatch.countDown();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+        
+        List<Object[]> results_2 = new ArrayList<>();
+        new Thread(() -> {
+            try {
+                AlertCustomConsumer alertCustomConsumer1 = getConsumer();
+                consumersCountDownLatch.await();
+                List<Object[]> results = alertCustomConsumer1.consumeAutoCommitDynamicPartitions(TEST_TOPIC, consumerProperties);
+                results_2.addAll(results);
+                resultCountDownLatch.countDown();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+        
+        Thread.sleep(1000);
+        
+        consumersCountDownLatch.countDown();
+        resultCountDownLatch.await();
+        assertThat("Results must have the save amount of records as the sources!",
+            results_1.size() + results_2.size(),
+            is(producerRecords1.size() + producerRecords2.size()));
+        
+        assertThat("Consumers must have different amount of received messages!",
+            results_1.size() == results_2.size(),
+            is(false));
     }
     
     //////////////////////////////////////////////////////
