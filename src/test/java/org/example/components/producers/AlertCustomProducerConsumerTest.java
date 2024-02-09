@@ -4,16 +4,23 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.example.components.consumers.AlertCustomConsumer;
 import org.example.configurations.EmbeddedKafkaHolder;
 import org.example.messages.AlertCustom;
@@ -173,7 +180,7 @@ public class AlertCustomProducerConsumerTest implements ApplicationContextAware 
         
         String testTopic = "offsetEarliestTest";
         
-        List<ProducerRecord<AlertCustom, String>> producerRecords = getProducerRecords(testTopic);
+        List<ProducerRecord<AlertCustom, String>> producerRecords = getProducerRecordsWithTimestampInMessage(testTopic);
         
         new Thread(() -> {
             try {
@@ -247,7 +254,7 @@ public class AlertCustomProducerConsumerTest implements ApplicationContextAware 
         
         String testTopic = "offsetLatestTest";
         
-        List<ProducerRecord<AlertCustom, String>> producerRecords = getProducerRecords(testTopic);
+        List<ProducerRecord<AlertCustom, String>> producerRecords = getProducerRecordsWithTimestampInMessage(testTopic);
         
         new Thread(() -> {
             try {
@@ -325,7 +332,7 @@ public class AlertCustomProducerConsumerTest implements ApplicationContextAware 
         
         String testTopic = "notFixedOffsetTest";
         
-        List<ProducerRecord<AlertCustom, String>> producerRecords = getProducerRecords(testTopic);
+        List<ProducerRecord<AlertCustom, String>> producerRecords = getProducerRecordsWithTimestampInMessage(testTopic);
         
         new Thread(() -> {
             try {
@@ -404,21 +411,93 @@ public class AlertCustomProducerConsumerTest implements ApplicationContextAware 
     
     @Test
     @DirtiesContext
-    @Disabled
-    void offsetForTimesTest() {
+    void offsetForTimesTest() throws InterruptedException {
         
-        // Find first offset.
-        // Map<TopicPartition, OffsetAndTimestamp> kaOffsetMap = consumer.offsetsForTimes(timeStampMapper);
+        //ReentrantLock reentrantLock = new ReentrantLock();
+        String testTopic = "offsetForTimesTest";
         
-        // Use obtained map of offsets.
-        // consumer.seek(partitionOne, kaOffsetMap.get(partitionOne).offset());
-    }
-    
-    @Test
-    @DirtiesContext
-    @Disabled
-    void messageCoordinatesTest() {
-        // groupId => Topic:Partition (Leading Replica):Offset
+        ///////////////////////////////////////////////////////////////////////////////////
+        // PRODUCING
+        List<ProducerRecord<AlertCustom, String>> producerRecords1 = getProducerRecordsWithTimestampInMessage(testTopic);
+        List<ProducerRecord<AlertCustom, String>> producerRecords2 = getProducerRecordsWithTimestampInMessage(testTopic);
+        
+        final long[] timestamps = new long[3];
+        Thread producerThread = new Thread(() -> {
+            try {
+                AlertCustomProducer alertCustomProducer = getProducer();
+                
+                timestamps[0] = System.currentTimeMillis();
+                alertCustomProducer.produce(producerRecords1);
+                timestamps[1] = System.currentTimeMillis();
+                alertCustomProducer.produce(producerRecords2);
+                timestamps[2] = System.currentTimeMillis();
+                
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        producerThread.start();
+        
+        producerThread.join();
+        
+        ///////////////////////////////////////////////////////////////////////////////////
+        // CONSUMING
+        AlertCustomConsumer alertCustomConsumer = getConsumer();
+        
+        Properties properties = new Properties();
+        properties.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
+        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        
+        List<Object[]> results = alertCustomConsumer.consumeRecordsAutoCommit(testTopic, properties);
+        assertThat("Results must have the save amount of records as the source!", results.size(),
+            is(producerRecords1.size() + producerRecords2.size()));
+        
+        ///////////////////////////////////////////////////////////////////////////////////
+        // GETTING OFFSETS BY TIMESTAMPS
+        TopicPartition topicPartition = new TopicPartition(testTopic, 0);
+        
+        Map<TopicPartition, Long> timestampsToSearch = new HashMap<>();
+        timestampsToSearch.put(new TopicPartition(testTopic, 0), timestamps[0]);
+        Map<TopicPartition, OffsetAndTimestamp> topicOffsetAndTimestamp_0 = alertCustomConsumer.consumeRecordsOffsetsForTimes(
+            timestampsToSearch, properties);
+        assertThat("One partition must be presented!", topicOffsetAndTimestamp_0.size(), equalTo(1));
+        
+        OffsetAndTimestamp offsetAndTimestamp_0 = topicOffsetAndTimestamp_0.get(topicPartition);
+        assertThat("Offset must be presented!", offsetAndTimestamp_0, is(notNullValue()));
+        
+        timestampsToSearch.clear();
+        timestampsToSearch.put(new TopicPartition(testTopic, 0), timestamps[1]);
+        Map<TopicPartition, OffsetAndTimestamp> topicOffsetAndTimestamp_1 = alertCustomConsumer.consumeRecordsOffsetsForTimes(
+            timestampsToSearch, properties);
+        assertThat("One partition must be presented!", topicOffsetAndTimestamp_1.size(), equalTo(1));
+        
+        OffsetAndTimestamp offsetAndTimestamp_1 = topicOffsetAndTimestamp_1.get(topicPartition);
+        assertThat("Offset must be presented!", offsetAndTimestamp_1, is(notNullValue()));
+        
+        assertThat("Offsets must be different!", offsetAndTimestamp_0, not(equalTo(offsetAndTimestamp_1)));
+        
+        timestampsToSearch.clear();
+        timestampsToSearch.put(new TopicPartition(testTopic, 0), timestamps[2]);
+        Map<TopicPartition, OffsetAndTimestamp> topicOffsetAndTimestamp_2 = alertCustomConsumer.consumeRecordsOffsetsForTimes(
+            timestampsToSearch, properties);
+        assertThat("One partition must be presented!", topicOffsetAndTimestamp_2.size(), equalTo(1));
+        
+        OffsetAndTimestamp offsetAndTimestamp_2 = topicOffsetAndTimestamp_2.get(topicPartition);
+        assertThat("Offset must be null!", offsetAndTimestamp_2, is(nullValue()));
+        
+        ///////////////////////////////////////////////////////////////////////////////////
+        // RETRIEVING MESSAGES BY OFFSETS
+        List<Object[]> resultsSeek_0 = alertCustomConsumer.seekAndConsumeRecordsAutoCommit(topicPartition, offsetAndTimestamp_0.offset(),
+            properties);
+        assertThat("Messages of all producing must be retrieved!", resultsSeek_0.size(),
+            equalTo(producerRecords1.size() + producerRecords2.size()));
+        
+        List<Object[]> resultsSeek_1 = alertCustomConsumer.seekAndConsumeRecordsAutoCommit(topicPartition, offsetAndTimestamp_1.offset(),
+            properties);
+        assertThat("Messages of the last producing must be retrieved!", resultsSeek_1.size(), equalTo(producerRecords2.size()));
     }
     
     //////////////////////////////////////////////////////
@@ -431,7 +510,7 @@ public class AlertCustomProducerConsumerTest implements ApplicationContextAware 
         return this.applicationContext.getBean(AlertCustomConsumer.class);
     }
     
-    private List<ProducerRecord<AlertCustom, String>> getProducerRecords(String recordsTopic) {
+    private List<ProducerRecord<AlertCustom, String>> getProducerRecordsWithTimestampInMessage(String recordsTopic) {
         
         List<ProducerRecord<AlertCustom, String>> producerRecords = new ArrayList<>();
         

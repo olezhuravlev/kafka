@@ -14,6 +14,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.example.messages.AlertCustom;
@@ -87,8 +88,7 @@ public class AlertCustomConsumer {
                     ConsumerRecords<AlertCustom, String> consumerRecords = consumer.poll(Duration.ofMillis(250));
                     for (ConsumerRecord<AlertCustom, String> consumerRecord : consumerRecords) {
                         LOGGER.info("+++ AlertCustomConsumer: consumeAutoCommit: offset={}, key={}, value={}", consumerRecord.offset(),
-                            consumerRecord.key(),
-                            consumerRecord.value());
+                            consumerRecord.key(), consumerRecord.value());
                         return Optional.of(new Object[] { consumerRecord.key(), consumerRecord.value() });
                     }
                     Thread.sleep(100);
@@ -301,6 +301,72 @@ public class AlertCustomConsumer {
                 callback.accept(null);
             }
         });
+    }
+    
+    public Map<TopicPartition, OffsetAndTimestamp> consumeRecordsOffsetsForTimes(Map<TopicPartition, Long> timestampsToSearch,
+        Properties properties) {
+        
+        Properties appliedProperties = new Properties();
+        
+        appliedProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        appliedProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        appliedProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        
+        // Override default properties with provided ones.
+        for (Map.Entry entry : properties.entrySet()) {
+            appliedProperties.put(entry.getKey(), entry.getValue());
+        }
+        
+        KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(appliedProperties);
+        return consumer.offsetsForTimes(timestampsToSearch);
+    }
+    
+    public List<Object[]> seekAndConsumeRecordsAutoCommit(TopicPartition topicPartition, long offset, Properties properties) {
+        
+        Properties appliedProperties = new Properties();
+        
+        appliedProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        appliedProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, AlertCustomKeySerde.class);
+        appliedProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        
+        // Override default properties with provided ones.
+        for (Map.Entry entry : properties.entrySet()) {
+            appliedProperties.put(entry.getKey(), entry.getValue());
+        }
+        
+        List<Object[]> results = new ArrayList<>();
+        
+        try (
+            KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(appliedProperties)) {
+            
+            // Coordinates for groupId => Topic:Partition (Leading Replica):Offset
+            
+            // Assign partition to consumer bypassing the group coordinator.
+            consumer.assign(List.of(topicPartition));
+            
+            // Seek by the provided offset.
+            consumer.seek(topicPartition, offset);
+            
+            consumingAttemptCounter = 10;
+            try {
+                while (consumingAttemptCounter > 0) {
+                    ConsumerRecords<AlertCustom, String> consumerRecords = consumer.poll(Duration.ofMillis(250));
+                    if (consumerRecords.isEmpty()) {
+                        --consumingAttemptCounter;
+                        Thread.sleep(100);
+                        continue;
+                    }
+                    for (ConsumerRecord<AlertCustom, String> consumerRecord : consumerRecords) {
+                        results.add(new Object[] { consumerRecord.key(), consumerRecord.value() });
+                    }
+                    consumingAttemptCounter = 10;
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
+        return results;
     }
     
     public static void dropCallbackInvoked() {

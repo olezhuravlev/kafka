@@ -42,7 +42,7 @@ public class AlertCustomProducerConsumerPartitionsTest implements ApplicationCon
     
     private ApplicationContext applicationContext;
     
-    private final static String TEST_TOPIC = "testPartitionsTopic";
+    private final static String TEST_TOPIC = "testPartitionsTopic"; // Topic declared for @EmbeddedKafka!
     
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
