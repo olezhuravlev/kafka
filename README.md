@@ -320,6 +320,107 @@ WARNING: Due to limitations in metric names, topics with a period ('.') or under
 Created topic kinaction_compact.
 ````
 
+---
+
+## KCat utility
+
+- -L - list metadata
+- -J - use json-format
+- -P - producer mode
+- -C - consumer mode
+- -b - brokers list
+- -t - target topic
+
+ 
+### List brokers and topics in cluster
+````bash
+$ docker run -it --rm --network=kafka_kafka-network --name kcat edenhill/kcat:1.7.1 -b kafka-broker-1:29092 -L
+Metadata for all topics (from broker 1: kafka-broker-1:29092/1):
+ 3 brokers:
+  broker 2 at kafka-broker-2:29092
+  broker 3 at kafka-broker-3:29092 (controller)
+  broker 1 at kafka-broker-1:29092
+ 2 topics:
+  topic "_schemas" with 1 partitions:
+    partition 0, leader 2, replicas: 2,1,3, isrs: 2,1,3
+  topic "__consumer_offsets" with 50 partitions:
+    partition 0, leader 3, replicas: 3,2,1, isrs: 3,2,1
+    partition 1, leader 1, replicas: 1,3,2, isrs: 1,3,2
+    partition 2, leader 2, replicas: 2,1,3, isrs: 2,1,3
+    partition 3, leader 3, replicas: 3,1,2, isrs: 3,1,2
+    partition 4, leader 1, replicas: 1,2,3, isrs: 1,2,3
+    partition 5, leader 2, replicas: 2,3,1, isrs: 2,3,1
+    partition 6, leader 3, replicas: 3,2,1, isrs: 3,2,1
+    partition 7, leader 1, replicas: 1,3,2, isrs: 1,3,2
+    partition 8, leader 2, replicas: 2,1,3, isrs: 2,1,3
+    partition 9, leader 3, replicas: 3,1,2, isrs: 3,1,2
+    partition 10, leader 1, replicas: 1,2,3, isrs: 1,2,3
+    partition 11, leader 2, replicas: 2,3,1, isrs: 2,3,1
+    partition 12, leader 3, replicas: 3,2,1, isrs: 3,2,1
+    partition 13, leader 1, replicas: 1,3,2, isrs: 1,3,2
+    partition 14, leader 2, replicas: 2,1,3, isrs: 2,1,3
+    partition 15, leader 3, replicas: 3,1,2, isrs: 3,1,2
+    partition 16, leader 1, replicas: 1,2,3, isrs: 1,2,3
+    partition 17, leader 2, replicas: 2,3,1, isrs: 2,3,1
+    partition 18, leader 3, replicas: 3,2,1, isrs: 3,2,1
+    partition 19, leader 1, replicas: 1,3,2, isrs: 1,3,2
+    partition 20, leader 2, replicas: 2,1,3, isrs: 2,1,3
+    partition 21, leader 3, replicas: 3,1,2, isrs: 3,1,2
+    partition 22, leader 1, replicas: 1,2,3, isrs: 1,2,3
+    partition 23, leader 2, replicas: 2,3,1, isrs: 2,3,1
+    partition 24, leader 3, replicas: 3,2,1, isrs: 3,2,1
+    partition 25, leader 1, replicas: 1,3,2, isrs: 1,3,2
+    partition 26, leader 2, replicas: 2,1,3, isrs: 2,1,3
+    partition 27, leader 3, replicas: 3,1,2, isrs: 3,1,2
+    partition 28, leader 1, replicas: 1,2,3, isrs: 1,2,3
+    partition 29, leader 2, replicas: 2,3,1, isrs: 2,3,1
+    partition 30, leader 3, replicas: 3,2,1, isrs: 3,2,1
+    partition 31, leader 1, replicas: 1,3,2, isrs: 1,3,2
+    partition 32, leader 2, replicas: 2,1,3, isrs: 2,1,3
+    partition 33, leader 3, replicas: 3,1,2, isrs: 3,1,2
+    partition 34, leader 1, replicas: 1,2,3, isrs: 1,2,3
+    partition 35, leader 2, replicas: 2,3,1, isrs: 2,3,1
+    partition 36, leader 3, replicas: 3,2,1, isrs: 3,2,1
+    partition 37, leader 1, replicas: 1,3,2, isrs: 1,3,2
+    partition 38, leader 2, replicas: 2,1,3, isrs: 2,1,3
+    partition 39, leader 3, replicas: 3,1,2, isrs: 3,1,2
+    partition 40, leader 1, replicas: 1,2,3, isrs: 1,2,3
+    partition 41, leader 2, replicas: 2,3,1, isrs: 2,3,1
+    partition 42, leader 3, replicas: 3,2,1, isrs: 3,2,1
+    partition 43, leader 1, replicas: 1,3,2, isrs: 1,3,2
+    partition 44, leader 2, replicas: 2,1,3, isrs: 2,1,3
+    partition 45, leader 3, replicas: 3,1,2, isrs: 3,1,2
+    partition 46, leader 1, replicas: 1,2,3, isrs: 1,2,3
+    partition 47, leader 2, replicas: 2,3,1, isrs: 2,3,1
+    partition 48, leader 3, replicas: 3,2,1, isrs: 3,2,1
+    partition 49, leader 1, replicas: 1,3,2, isrs: 1,3,2
+````
+
+````bash
+$ docker run -it --rm --network=kafka_kafka-network --name kcat edenhill/kcat:1.7.1 -b kafka-broker-1:29092 -L -J
+{"originating_broker":{"id":1,"name":"kafka-broker-1:29092/1"},"query":{"topic":"*"},"controllerid":2,"brokers":[{"id":2,"name":"kafka-broker-2:29092"},{"id":3,"name":"kafka-broker-3:29092"},{"id":1,"name":"kafka-broker-1:29092"}],"topics":[{"topic":"_schemas","partitions":[{"partition":0,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]}]},{"topic":"__consumer_offsets","partitions":[{"partition":0,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]},{"partition":1,"leader":1,"replicas":[{"id":1},{"id":2},{"id":3}],"isrs":[{"id":1},{"id":2},{"id":3}]},{"partition":2,"leader":2,"replicas":[{"id":2},{"id":3},{"id":1}],"isrs":[{"id":2},{"id":3},{"id":1}]},{"partition":3,"leader":3,"replicas":[{"id":3},{"id":2},{"id":1}],"isrs":[{"id":3},{"id":2},{"id":1}]},{"partition":4,"leader":1,"replicas":[{"id":1},{"id":3},{"id":2}],"isrs":[{"id":1},{"id":3},{"id":2}]},{"partition":5,"leader":2,"replicas":[{"id":2},{"id":1},{"id":3}],"isrs":[{"id":2},{"id":1},{"id":3}]},{"partition":6,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]},{"partition":7,"leader":1,"replicas":[{"id":1},{"id":2},{"id":3}],"isrs":[{"id":1},{"id":2},{"id":3}]},{"partition":8,"leader":2,"replicas":[{"id":2},{"id":3},{"id":1}],"isrs":[{"id":2},{"id":3},{"id":1}]},{"partition":9,"leader":3,"replicas":[{"id":3},{"id":2},{"id":1}],"isrs":[{"id":3},{"id":2},{"id":1}]},{"partition":10,"leader":1,"replicas":[{"id":1},{"id":3},{"id":2}],"isrs":[{"id":1},{"id":3},{"id":2}]},{"partition":11,"leader":2,"replicas":[{"id":2},{"id":1},{"id":3}],"isrs":[{"id":2},{"id":1},{"id":3}]},{"partition":12,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]},{"partition":13,"leader":1,"replicas":[{"id":1},{"id":2},{"id":3}],"isrs":[{"id":1},{"id":2},{"id":3}]},{"partition":14,"leader":2,"replicas":[{"id":2},{"id":3},{"id":1}],"isrs":[{"id":2},{"id":3},{"id":1}]},{"partition":15,"leader":3,"replicas":[{"id":3},{"id":2},{"id":1}],"isrs":[{"id":3},{"id":2},{"id":1}]},{"partition":16,"leader":1,"replicas":[{"id":1},{"id":3},{"id":2}],"isrs":[{"id":1},{"id":3},{"id":2}]},{"partition":17,"leader":2,"replicas":[{"id":2},{"id":1},{"id":3}],"isrs":[{"id":2},{"id":1},{"id":3}]},{"partition":18,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]},{"partition":19,"leader":1,"replicas":[{"id":1},{"id":2},{"id":3}],"isrs":[{"id":1},{"id":2},{"id":3}]},{"partition":20,"leader":2,"replicas":[{"id":2},{"id":3},{"id":1}],"isrs":[{"id":2},{"id":3},{"id":1}]},{"partition":21,"leader":3,"replicas":[{"id":3},{"id":2},{"id":1}],"isrs":[{"id":3},{"id":2},{"id":1}]},{"partition":22,"leader":1,"replicas":[{"id":1},{"id":3},{"id":2}],"isrs":[{"id":1},{"id":3},{"id":2}]},{"partition":23,"leader":2,"replicas":[{"id":2},{"id":1},{"id":3}],"isrs":[{"id":2},{"id":1},{"id":3}]},{"partition":24,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]},{"partition":25,"leader":1,"replicas":[{"id":1},{"id":2},{"id":3}],"isrs":[{"id":1},{"id":2},{"id":3}]},{"partition":26,"leader":2,"replicas":[{"id":2},{"id":3},{"id":1}],"isrs":[{"id":2},{"id":3},{"id":1}]},{"partition":27,"leader":3,"replicas":[{"id":3},{"id":2},{"id":1}],"isrs":[{"id":3},{"id":2},{"id":1}]},{"partition":28,"leader":1,"replicas":[{"id":1},{"id":3},{"id":2}],"isrs":[{"id":1},{"id":3},{"id":2}]},{"partition":29,"leader":2,"replicas":[{"id":2},{"id":1},{"id":3}],"isrs":[{"id":2},{"id":1},{"id":3}]},{"partition":30,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]},{"partition":31,"leader":1,"replicas":[{"id":1},{"id":2},{"id":3}],"isrs":[{"id":1},{"id":2},{"id":3}]},{"partition":32,"leader":2,"replicas":[{"id":2},{"id":3},{"id":1}],"isrs":[{"id":2},{"id":3},{"id":1}]},{"partition":33,"leader":3,"replicas":[{"id":3},{"id":2},{"id":1}],"isrs":[{"id":3},{"id":2},{"id":1}]},{"partition":34,"leader":1,"replicas":[{"id":1},{"id":3},{"id":2}],"isrs":[{"id":1},{"id":3},{"id":2}]},{"partition":35,"leader":2,"replicas":[{"id":2},{"id":1},{"id":3}],"isrs":[{"id":2},{"id":1},{"id":3}]},{"partition":36,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]},{"partition":37,"leader":1,"replicas":[{"id":1},{"id":2},{"id":3}],"isrs":[{"id":1},{"id":2},{"id":3}]},{"partition":38,"leader":2,"replicas":[{"id":2},{"id":3},{"id":1}],"isrs":[{"id":2},{"id":3},{"id":1}]},{"partition":39,"leader":3,"replicas":[{"id":3},{"id":2},{"id":1}],"isrs":[{"id":3},{"id":2},{"id":1}]},{"partition":40,"leader":1,"replicas":[{"id":1},{"id":3},{"id":2}],"isrs":[{"id":1},{"id":3},{"id":2}]},{"partition":41,"leader":2,"replicas":[{"id":2},{"id":1},{"id":3}],"isrs":[{"id":2},{"id":1},{"id":3}]},{"partition":42,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]},{"partition":43,"leader":1,"replicas":[{"id":1},{"id":2},{"id":3}],"isrs":[{"id":1},{"id":2},{"id":3}]},{"partition":44,"leader":2,"replicas":[{"id":2},{"id":3},{"id":1}],"isrs":[{"id":2},{"id":3},{"id":1}]},{"partition":45,"leader":3,"replicas":[{"id":3},{"id":2},{"id":1}],"isrs":[{"id":3},{"id":2},{"id":1}]},{"partition":46,"leader":1,"replicas":[{"id":1},{"id":3},{"id":2}],"isrs":[{"id":1},{"id":3},{"id":2}]},{"partition":47,"leader":2,"replicas":[{"id":2},{"id":1},{"id":3}],"isrs":[{"id":2},{"id":1},{"id":3}]},{"partition":48,"leader":3,"replicas":[{"id":3},{"id":1},{"id":2}],"isrs":[{"id":3},{"id":1},{"id":2}]},{"partition":49,"leader":1,"replicas":[{"id":1},{"id":2},{"id":3}],"isrs":[{"id":1},{"id":2},{"id":3}]}]}]}%   
+````
+
+### Producer mode with 'edenhill/kcat' image (messages sent with Ctrl+D)
+````bash
+$ docker run -it --rm --network kafka_kafka-network --name kcat-producer edenhill/kcat:1.7.1 -b kafka-broker-1:29092 -P -t kinaction_selfserviceTopic
+Some message
+````
+
+### Producer mode with 'confluentinc/cp-kafkacat' image (messages sent with ENTER)
+````bash
+$ docker run -it --rm --network kafka_kafka-network --name kcat-producer confluentinc/cp-kafkacat:7.0.13 kafkacat -b kafka-broker-1:29092 -P -t kinaction_selfserviceTopic
+Some message
+````
+
+### Consumer mode
+````bash
+$ docker run -it --rm --network=kafka_kafka-network --name kcat-consumer edenhill/kcat:1.7.1 -b kafka-broker-1:29092 -C -t kinaction_selfserviceTopic
+% Reached end of topic kinaction_selfserviceTopic [0] at offset 0
+Some message
+% Reached end of topic kinaction_selfserviceTopic [0] at offset 1
+````
+
 ````bash
 ````
 
