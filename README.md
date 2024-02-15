@@ -2,85 +2,89 @@
 
 | Service                                                | Default Port |
 |--------------------------------------------------------|--------------|
-| Kafka Clients connections port                         | 9092         |
+| Kafka Clients listeners connections port*              | 9092         |
 | Kafka private communication port (Control Plane)       | 9093         |
 | "Kafka Connect" service port                           | 8083         | 
 | ZooKeeper external client connections port             | 2181         |     
-| ZooKeeper peers connections port                       | 2888         |
-| ZooKeeper host election port                           | 3888         |
+| ZooKeeper peers (leader-worker) connections port       | 2888         |
+| ZooKeeper host election (node-to-node) port            | 3888         |
 | Kafka Schema Registry connection port                  | 8081         |
 | REST Proxy (RESTful interface) to Apache Kafka cluster | 8082         |    
 | ksqlDB                                                 | 8088         |
+
+- *`KAFKA_LISTENERS` - initial connection port;
+- `KAFKA_ADVERTISED_LISTENERS` - working connection port;
+- `KAFKA_INTER_BROKER_LISTENER_NAME` - inter-broker connection method;
 
 ---
 
 Kafka in `confluentinc/cp-zookeeper`:
 
-```bash
+````bash
 [appuser@d940ac41c21b kafka]$ pwd
 /etc/kafka
-```
+````
 
 ---
 
 ### Check if port opened:
 
-```bash
+````bash
 $ nc -vz kafka-broker-1 29092
 Connection to kafka-broker-1 (172.22.0.4) 29092 port [tcp/*] succeeded!
-```
+````
 
 ### Check what uses a port:
 
-```bash
+````bash
 $ sudo netstat -anp | grep 8083
-```
+````
 
 ### Find directory in child directories
 
-```bash
+````bash
 $ ls -d */ | grep "bla-bla"
 $ ls -d */*/ | grep "bla-bla"
 $ ls -d */*/*/ | grep "bla-bla"
 $ ls -d */*/*/*/ | grep "bla-bla"
 etc.
-```
+````
 
 ### Remove just one container of Docker Compose:
-```bash
+````bash
 $ docker-compose rm -s -v -f schema-registry
 Going to remove schema-registry
 Removing schema-registry ... done
-```
+````
 
 ### Create topic:
 
-```bash
+````bash
 $ docker exec -it kafka-broker-1 kafka-topics --create --bootstrap-server kafka-broker-1:29092 --topic kinaction_hw --partitions 3 --replication-factor 3
 WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not both.
 Created topic kinaction_hw.
-```
+````
 
 ### List topics:
 
-```bash
+````bash
 $ docker exec -it kafka-broker-1 kafka-topics --list --bootstrap-server kafka-broker-1:29092
 kinaction_hw
-```
+````
 
-```bash
+````bash
 $ docker exec -it kafka-broker-1 kafka-topics --describe --topic kinaction_hw --bootstrap-server kafka-broker-1:29092
 Topic: kinaction_hw	TopicId: Zjx4vTh4TX6t7woWQkalWQ	PartitionCount: 3	ReplicationFactor: 3	Configs: 
 	Topic: kinaction_hw	Partition: 0	Leader: 1	Replicas: 1,2,3	Isr: 1,2,3
 	Topic: kinaction_hw	Partition: 1	Leader: 2	Replicas: 2,3,1	Isr: 2,3,1
 	Topic: kinaction_hw	Partition: 2	Leader: 3	Replicas: 3,1,2	Isr: 3,1,2
-```
+````
 
 ### Delete topic:
 
-```bash
+````bash
 docker exec -it kafka-broker-1 kafka-topics --delete --topic mysql_topic --bootstrap-server kafka-broker-1:29092
-```
+````
 
 > Option zookeeper is deprecated, use --bootstrap-server instead!
 
@@ -108,47 +112,47 @@ _schemas
 
 ### Console producer:
 
-```bash
+````bash
 docker exec -it kafka-broker-1 kafka-console-producer --topic kinaction_hw --bootstrap-server kafka-broker-1:29092
-```
+````
 
 ### Console consumer:
 
-```bash
+````bash
 docker exec -it kafka-broker-1 kafka-console-consumer --topic kinaction_hw --bootstrap-server kafka-broker-1:29092 --from-beginning
-```
+````
 
 ---
 
 ### Start Kafka Connect Producer for text:
 
-```bash
+````bash
 docker exec -it kafka-connect connect-standalone /resources-kafka/connectors/file/connect-standalone.properties /resources-kafka/connectors/file/alert-source.properties
-```
+````
 
 ### Start Kafka Connect console Consumer for text:
 
-```bash
+````bash
 docker exec -it kafka-connect kafka-console-consumer --topic kinaction_alert_connect --bootstrap-server kafka-broker-1:29092 --from-beginning
-```
+````
 
 ### Start Kafka Connect for text source and destination simultaneously:
 
-```bash
+````bash
 docker exec -it kafka-connect connect-standalone /resources-kafka/connectors/file/connect-standalone.properties /resources-kafka/connectors/file/alert-source.properties /resources-kafka/connectors/file/alert-sink.properties
-```
+````
 
 ### Start Kafka Connect Producer for MySql:
 
-```bash
+````bash
 docker exec -it kafka-connect connect-standalone /resources-kafka/connectors/mysql/connect-standalone.properties /resources-kafka/connectors/mysql/mysql-source.properties
-```
+````
 
 ### Start Kafka Connect for MySql source and destination simultaneously:
 
-```bash
+````bash
 docker exec -it kafka-connect connect-standalone /resources-kafka/connectors/mysql/connect-standalone.properties /resources-kafka/connectors/mysql/mysql-source.properties /resources-kafka/connectors/mysql/mysql-sink.properties
-```
+````
 
 ### Launch `zookeeper-shell` utility
 
@@ -419,6 +423,98 @@ $ docker run -it --rm --network=kafka_kafka-network --name kcat-consumer edenhil
 % Reached end of topic kinaction_selfserviceTopic [0] at offset 0
 Some message
 % Reached end of topic kinaction_selfserviceTopic [0] at offset 1
+````
+
+---
+
+## KCat utility
+
+### Requests with `curl`
+
+````bash
+$ curl localhost:8082/topics
+["_schemas"]%
+
+$ curl localhost:8082/topics/_schemas
+{"name":"_schemas","configs":{"compression.type":"producer","leader.replication.throttled.replicas":"","message.downconversion.enable":"true","min.insync.replicas":"1","segment.jitter.ms":"0","cleanup.policy":"compact","flush.ms":"9223372036854775807","follower.replication.throttled.replicas":"","segment.bytes":"1073741824","retention.ms":"604800000","flush.messages":"9223372036854775807","message.format.version":"3.0-IV1","max.compaction.lag.ms":"9223372036854775807","file.delete.delay.ms":"60000","max.message.bytes":"1048588","min.compaction.lag.ms":"0","message.timestamp.type":"CreateTime","preallocate":"false","min.cleanable.dirty.ratio":"0.5","index.interval.bytes":"4096","unclean.leader.election.enable":"false","retention.bytes":"-1","delete.retention.ms":"86400000","segment.ms":"604800000","message.timestamp.difference.max.ms":"9223372036854775807","segment.index.bytes":"10485760"},"partitions":[{"partition":0,"leader":1,"replicas":[{"broker":1,"leader":true,"in_sync":true},{"broker":2,"leader":false,"in_sync":true},{"broker":3,"leader":false,"in_sync":true}]}]}%
+
+$ curl localhost:8082/topics/_schemas/partitions
+[{"partition":0,"leader":1,"replicas":[{"broker":1,"leader":true,"in_sync":true},{"broker":2,"leader":false,"in_sync":true},{"broker":3,"leader":false,"in_sync":true}]}]%
+
+$ curl localhost:8082/topics/_schemas/partitions/0/offsets
+{"beginning_offset":0,"end_offset":2}%
+
+$ curl localhost:8082/brokers  
+{"brokers":[1,2,3]}%     
+````
+
+### Create topic and send a message to the topic (binary request)
+````bash
+$ curl -H "Content-Type: application/vnd.kafka.binary.v2+json" -H "Accept: application/vnd.kafka.v2+json, application/vnd.kafka+json, application/json" -X POST localhost:8082/topics/myTopic -d '{
+  "records": [
+    {
+      "key": "a2V5",
+      "value": "Y29uZmx1ZW50"
+    },
+    {
+      "value": "bG9ncw=="
+    }
+  ]
+}'
+````
+
+### Create topic and send a message to the topic (JSON request)
+````bash
+$ curl -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json, application/vnd.kafka+json, application/json" -X POST localhost:8082/topics/myTopic2 -d '
+{
+  "records": [
+    {
+      "key": "somekey",
+      "value": {"foo": "bar"}
+    },
+    {
+      "value": 53.5
+    }
+  ]
+}'
+````
+
+````bash
+$ curl -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json, application/vnd.kafka+json, application/json" -X POST localhost:8082/topics/myTopic3 -d ' 
+{
+  "records": [
+    {
+      "key": "somekey",
+      "value": {"foo": "bar"}
+    }
+  ]
+}'
+{"offsets":[{"partition":0,"offset":0,"error_code":null,"error":null}],"key_schema_id":null,"value_schema_id":null}%
+````
+
+````bash
+$ curl -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json, application/vnd.kafka+json, application/json" -X POST localhost:8082/topics/myTopic4 -d '
+{
+  "records": [
+    {
+      "value": 53.5
+    }
+  ]
+}'
+{"offsets":[{"partition":0,"offset":0,"error_code":null,"error":null}],"key_schema_id":null,"value_schema_id":null}%  
+````
+
+### This variant doesn't work:
+````bash
+$ curl -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json, application/vnd.kafka+json, application/json" -X POST localhost:8082/topics/myTopic5 -d '
+{
+  "records": [
+    {
+      "value": [ "foo", "bar" ],
+      "partition": 1
+    }
+  ]
+}'
 ````
 
 ````bash

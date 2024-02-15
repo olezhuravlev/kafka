@@ -125,6 +125,25 @@ services:
     networks:
       - kafka-network
 
+  kafka-rest:
+    image: "confluentinc/cp-kafka-rest:${KAFKA_VERSION}"
+    container_name: kafka-rest
+    hostname: kafka-rest
+    ports:
+      - "8082:8082"
+    depends_on:
+      - zookeeper-1
+      - kafka-broker-1
+      - schema-registry
+    environment:
+      KAFKA_REST_HOST_NAME: "kafka-rest"
+      KAFKA_REST_LISTENERS: "http://kafka-rest:8082"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KAFKA_REST_ZOOKEEPER_CONNECT: "zookeeper-1:2181"
+      KAFKA_REST_BOOTSTRAP_SERVERS: "kafka-broker-1:29092"
+    networks:
+      - kafka-network
+
 networks:
   kafka-network:
     driver: bridge
