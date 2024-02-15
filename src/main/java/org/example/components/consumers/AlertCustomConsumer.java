@@ -74,6 +74,8 @@ public class AlertCustomConsumer {
         appliedProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
         appliedProperties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         
+        appliedProperties.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, AlertCustomConsumerMetricsInterceptor.class.getName());
+        
         try (
             KafkaConsumer<AlertCustom, String> consumer = new KafkaConsumer<>(appliedProperties)) {
             //consumer.subscribe(List.of(topic));
@@ -89,7 +91,7 @@ public class AlertCustomConsumer {
                     for (ConsumerRecord<AlertCustom, String> consumerRecord : consumerRecords) {
                         LOGGER.info("+++ AlertCustomConsumer: consumeAutoCommit: offset={}, key={}, value={}", consumerRecord.offset(),
                             consumerRecord.key(), consumerRecord.value());
-                        return Optional.of(new Object[] { consumerRecord.key(), consumerRecord.value() });
+                        return Optional.of(new Object[] { consumerRecord.key(), consumerRecord.value(), consumerRecord.headers() });
                     }
                     Thread.sleep(100);
                     --consumingAttemptCounter;

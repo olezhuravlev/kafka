@@ -18,8 +18,11 @@ import org.example.messages.AlertCustom;
 import org.example.serializers.AlertCustomKeySerde;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -32,6 +35,10 @@ public class AlertCustomProducer {
     private String bootstrapServers;
     
     private static boolean callbackInvoked;
+    
+    @Autowired
+    @Qualifier("kafkaTemplateWithProducerInterceptor")
+    private KafkaTemplate kafkaTemplate;
     
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         AlertCustomProducer producer = new AlertCustomProducer();
@@ -53,6 +60,12 @@ public class AlertCustomProducer {
         }
     }
     
+    public void produceWithInterceptor(final String topic, final String message, final AlertCustom alert)
+        throws ExecutionException, InterruptedException {
+        kafkaTemplate.send(topic, alert, message);
+        kafkaTemplate.flush();
+    }
+    
     public void produce(String topic, String message, AlertCustom alert) throws ExecutionException, InterruptedException {
         
         Properties appliedProperties = new Properties();
@@ -61,6 +74,8 @@ public class AlertCustomProducer {
         appliedProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         appliedProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AlertCustomPartitioner.class);
         // appliedProperties.put(ProducerConfig.ACKS_CONFIG, "all");
+
+        //appliedProperties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, AlertCustomProducerMetricsInterceptor.class.getName());
         
         try (
             Producer<AlertCustom, String> producer = new KafkaProducer<>(appliedProperties)) {

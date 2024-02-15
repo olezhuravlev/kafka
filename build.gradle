@@ -43,6 +43,8 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testImplementation 'org.testcontainers:kafka'
 
+    testImplementation 'org.mockito:mockito-core'
+
     testCompileOnly 'junit:junit'
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
 
