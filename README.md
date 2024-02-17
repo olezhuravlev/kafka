@@ -1,20 +1,43 @@
 ### The default Kafka ecosystem ports
 
-| Service                                                | Default Port |
-|--------------------------------------------------------|--------------|
-| Kafka Clients listeners connections port*              | 9092         |
-| Kafka private communication port (Control Plane)       | 9093         |
-| "Kafka Connect" service port                           | 8083         | 
-| ZooKeeper external client connections port             | 2181         |     
-| ZooKeeper peers (leader-worker) connections port       | 2888         |
-| ZooKeeper host election (node-to-node) port            | 3888         |
-| Kafka Schema Registry connection port                  | 8081         |
-| REST Proxy (RESTful interface) to Apache Kafka cluster | 8082         |    
-| ksqlDB                                                 | 8088         |
+| Service                                                | Default Port | Container environment variable |
+|--------------------------------------------------------|--------------|--------------------------------|
+| Kafka Clients listeners connections port*              | 9092         | KAFKA_LISTENERS                |
+| Kafka private communication port (Control Plane)       | 9093         | KAFKA_LISTENERS                |
+| "Kafka Connect" service port                           | 8083         |                                |
+| ZooKeeper external client connections port             | 2181         |                                |     
+| ZooKeeper peers (leader-worker) connections port       | 2888         |                                |
+| ZooKeeper host election (node-to-node) port            | 3888         |                                |
+| Kafka Schema Registry connection port                  | 8081         |                                |
+| REST Proxy (RESTful interface) to Apache Kafka cluster | 8082         |                                |    
+| ksqlDB                                                 | 8088         |                                |
 
-- *`KAFKA_LISTENERS` - initial connection port;
-- `KAFKA_ADVERTISED_LISTENERS` - working connection port;
-- `KAFKA_INTER_BROKER_LISTENER_NAME` - inter-broker connection method;
+
+### Kafka Docker parameters
+
+| Parameter                        | Comment                                                        | Container environment variable             | Broker-1                                                         | Broker-2                                                         | Broker-3                                                         |
+|----------------------------------|----------------------------------------------------------------|--------------------------------------------|------------------------------------------------------------------|------------------------------------------------------------------|------------------------------------------------------------------|
+| broker.id                        |                                                                | KAFKA_BROKER_ID                            | 1                                                                | 2                                                                | 3                                                                |
+| zookeeper.connect                |                                                                | KAFKA_ZOOKEEPER_CONNECT                    | zookeeper-1:2181                                                 | zookeeper-1:2181                                                 | zookeeper-1:2181                                                 |
+| jmx.port                         |                                                                | KAFKA_JMX_PORT                             | 9997                                                             | 9997                                                             | 9997                                                             |
+| listeners                        | initial connection protocol->port (Kafka binds to and listens) | KAFKA_LISTENERS                            | PLAINTEXT://kafka-broker-1:29092,PLAINTEXT_HOST://localhost:9072 | PLAINTEXT://kafka-broker-2:29092,PLAINTEXT_HOST://localhost:9082 | PLAINTEXT://kafka-broker-3:29092,PLAINTEXT_HOST://localhost:9092 |
+| advertised.listeners             | working connection port (metadata passed back to clients)      | KAFKA_ADVERTISED_LISTENERS                 | PLAINTEXT://kafka-broker-1:29092,PLAINTEXT_HOST://localhost:9072 | PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT                     | PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT                     |
+| listener.security.protocol.map   | key/value pairs for the security protocol to use per listener  | KAFKA_LISTENER_SECURITY_PROTOCOL_MAP       | PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT                     | PLAINTEXT                                                        | PLAINTEXT                                                        |
+| inter.broker.listener.name       | inter-broker connection method                                 | KAFKA_INTER_BROKER_LISTENER_NAME           | PLAINTEXT                                                        |                                                                  |                                                                  |
+| log.dirs                         |                                                                |                                            | /var/lib/kafka/data                                              | /var/lib/kafka/data                                              | /var/lib/kafka/data                                              |
+| offsets.topic.replication.factor |                                                                | KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR     | 1                                                                | 1                                                                | 1                                                                |
+| ssl.keystore.location            |                                                                | KAFKA_SSL_KEYSTORE_FILENAME                | keystore_filename                                                |                                                                  |                                                                  |
+| ssl.keystore.credentials         |                                                                | KAFKA_SSL_KEYSTORE_CREDENTIALS             | keystore_credentials                                             |                                                                  |                                                                  |
+| ssl.key.credentials              |                                                                | KAFKA_SSL_KEY_CREDENTIALS                  | key_credentials                                                  |                                                                  |                                                                  |
+| ssl.truststore.location          |                                                                | KAFKA_SSL_TRUSTSTORE_FILENAME              | truststore_filename                                              |                                                                  |                                                                  |
+| ssl.truststore.credentials       |                                                                | KAFKA_SSL_TRUSTSTORE_CREDENTIALS           | truststore_credentials                                           |                                                                  |                                                                  |
+| security.inter.broker.protocol   |                                                                | KAFKA_SECURITY_INTER_BROKER_PROTOCOL       | inter_broker_protocol                                            |                                                                  |                                                                  |
+|                                  |                                                                | KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL | sasl_mechanism_inter_broker_protocol                             |                                                                  |                                                                  |
+|                                  |                                                                | KAFKA_SASL_ENABLED_MECHANISMS              | sasl_enabled_mechanism                                           |                                                                  |                                                                  |
+|                                  |                                                                | KAFKA_SASL_KERBEROS_SERVICE_NAME           | sasl_kerberos_service                                            |                                                                  |                                                                  |
+|                                  |                                                                | KAFKA_OPTS                                 | opts                                                             |                                                                  |                                                                  |
+|                                  |                                                                |                                            |                                                                  |                                                                  |                                                                  |
+|                                  |                                                                |                                            |                                                                  |                                                                  |                                                                  |
 
 ---
 
@@ -504,7 +527,7 @@ $ curl -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: applica
 {"offsets":[{"partition":0,"offset":0,"error_code":null,"error":null}],"key_schema_id":null,"value_schema_id":null}%  
 ````
 
-### This variant doesn't work:
+### The following variant doesn't work:
 ````bash
 $ curl -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json, application/vnd.kafka+json, application/json" -X POST localhost:8082/topics/myTopic5 -d '
 {
@@ -517,11 +540,54 @@ $ curl -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: applica
 }'
 ````
 
+---
+
+## Kafka Security
+
+---
+
+### `keytool` parameters кeys
+- `-genkeypair` (-genkey) - generate a key pair;
+- `-noprompt` - no interaction with the user;
+- `-alias` - entry name (alias name of the entry) to process;
+- `-dname` - distinguished name (the string must be in the following format: 'CN=cName, OU=orgUnit, O=org, L=city, S=state, C=countryCode');
+- `-keystore` - keystore file location;
+- `-keyalg` - key algorithm name;
+- `-storepass` - keystore password;
+- `-keypass` - key password;
+- `-validity` - validity number of days;
+
+---
+
+### `openssl` [parameters кeys](https://www.openssl.org/docs/man1.1.1/man1/openssl-req.html)
+
+- `-new` - generate new Certificate Signing Request (CSR);
+- `-x509` - output a self-signed certificate (instead of a certificate request);
+- `-keyout` - name of key file;
+- `-out` - name of private key file;
+- `-days` - expire days from time of certificate generation (only if the `-x509` option is being used);
+- `-subj` - subject name for new request (must be formatted as '/type0=value0/type1=value1/type2=...');
+- `-passin pass:<password>` - input password;
+- `-passout pass:<password>` - output password;
+
+> Files `ca.crt` and `cakey.crt` created.
+
+---
+
+#### Steps to establish SSL-security certificates: [security.drawio](security.drawio)
+
+#### Implementation: [create-certificates.sh](confluent-platform-security-tools/ssl/kafka-brokers/create-certificates.sh)
+
+#### Full procedure including SSL-certificates exchange: [mutual-trust.sh](confluent-platform-security-tools/ssl/kafka-brokers/mutual-trust.sh)
+
+#### Client properties: [ssl.properties](confluent-platform-security-tools/ssl/kafka-brokers/client/ssl.properties)
+
+#### Producer using SSL:
 ````bash
+$ docker exec -it kafka-broker-3 kafka-console-producer --topic kinaction_test_ssl --bootstrap-server kafka-broker-3:29093 --producer.config /resources-kafka/ssl-client/ssl.properties
 ````
 
+#### Consumer using SSL:
 ````bash
-````
-
-````bash
+$ docker exec -it kafka-broker-3 kafka-console-consumer --topic kinaction_test_ssl --bootstrap-server kafka-broker-3:29093 --from-beginning --consumer.config /resources-kafka/ssl-client/ssl.properties
 ````
