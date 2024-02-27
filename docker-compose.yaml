@@ -26,6 +26,9 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: "schema-registry"
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka-broker-3:29092"
       SCHEMA_REGISTRY_LISTENERS: "http://schema-registry:8081"
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "zookeeper-1:2181"
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: "_my_schema_registry"
+      SCHEMA_REGISTRY_DEBUG: "true"
     ports:
       - "8081:8081"
     networks:

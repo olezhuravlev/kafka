@@ -591,3 +591,37 @@ $ docker exec -it kafka-broker-3 kafka-console-producer --topic kinaction_test_s
 ````bash
 $ docker exec -it kafka-broker-3 kafka-console-consumer --topic kinaction_test_ssl --bootstrap-server kafka-broker-3:29093 --from-beginning --consumer.config /resources-kafka/ssl-client/ssl.properties
 ````
+
+---
+
+# Security
+
+Решение состоит из двух частей:
+- шифрование данных.
+- аутентификация и авторизация;
+
+## Security topics
+
+- SSL-handshake; - DONE!
+- keystore;
+- truststore;
+- cipher suite;
+- Key Pairs entity;
+- CSR (Certificate Signing Request);
+- SSL-authentication;
+- how SSL organized in Kafka cluster;
+- Kerberos;
+- SASL (Simple Authentication and Security Layer);
+- JAAS;
+- keytab;
+
+## ACL
+
+## RBAC
+- ограничение пропускной способности сети;
+- ограничение частоты запросов;
+
+## Quotas
+
+
+---
