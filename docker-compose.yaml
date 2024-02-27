@@ -24,7 +24,7 @@ services:
       - zookeeper-1
     environment:
       SCHEMA_REGISTRY_HOST_NAME: "schema-registry"
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka-broker-3:29092"
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka-broker-3:9092"
       SCHEMA_REGISTRY_LISTENERS: "http://schema-registry:8081"
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "zookeeper-1:2181"
       SCHEMA_REGISTRY_KAFKASTORE_TOPIC: "_my_schema_registry"
@@ -51,7 +51,7 @@ services:
     # remote clients
     #
     # For connections _internal_ to the docker network, such as from other services
-    # and components, use broker:29092.
+    # and components, use broker:9092.
     #
     # See https://rmoff.net/2018/08/02/kafka-listeners-explained/ for details
     # "`-._,-'"`-._,-'"`-._,-'"`-._,-'"`-._,-'"`-._,-'"`-._,-'"`-._,-'"`-._,-
@@ -65,8 +65,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_JMX_PORT: 9997
-      KAFKA_LISTENERS: PLAINTEXT://kafka-broker-1:29092,SSL://kafka-broker-1:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-1:29092,SSL://kafka-broker-1:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka-broker-1:9092,SSL://kafka-broker-1:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-1:9092,SSL://kafka-broker-1:9093
       KAFKA_SSL_KEY_CREDENTIALS: ssl_key_credentials #REQUIRED!
       KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.truststore.jks #REQUIRED!
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ssl_truststore_credentials # REQUIRED!
@@ -96,8 +96,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_JMX_PORT: 9997
-      KAFKA_LISTENERS: PLAINTEXT://kafka-broker-2:29092,SSL://kafka-broker-2:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-2:29092,SSL://kafka-broker-2:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka-broker-2:9092,SSL://kafka-broker-2:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-2:9092,SSL://kafka-broker-2:9093
       KAFKA_SSL_KEY_CREDENTIALS: ssl_key_credentials #REQUIRED!
       KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.truststore.jks #REQUIRED!
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ssl_truststore_credentials # REQUIRED!
@@ -127,8 +127,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_JMX_PORT: 9997
-      KAFKA_LISTENERS: PLAINTEXT://kafka-broker-3:29092,SSL://kafka-broker-3:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-3:29092,SSL://kafka-broker-3:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka-broker-3:9092,SSL://kafka-broker-3:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-3:9092,SSL://kafka-broker-3:9093
       KAFKA_SSL_KEY_CREDENTIALS: ssl_key_credentials #REQUIRED!
       KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.truststore.jks #REQUIRED!
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ssl_truststore_credentials # REQUIRED!
@@ -151,7 +151,7 @@ services:
       - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-broker-3:29092"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-broker-3:9092"
       KAFKA_CLUSTERS_0_METRICS_PORT: 9997
       DYNAMIC_CONFIG_ENABLED: 'true'
     networks:
@@ -172,7 +172,7 @@ services:
       KAFKA_REST_LISTENERS: "http://kafka-rest:8082"
       KAFKA_REST_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
       KAFKA_REST_ZOOKEEPER_CONNECT: "zookeeper-1:2181"
-      KAFKA_REST_BOOTSTRAP_SERVERS: "kafka-broker-3:29092"
+      KAFKA_REST_BOOTSTRAP_SERVERS: "kafka-broker-3:9092"
     networks:
       - kafka-network
 
