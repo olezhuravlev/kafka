@@ -26,6 +26,11 @@
         ]
       },
       "doc": "The allowed values that our sensors will use to emit current status"
+    },
+    {
+      "name": "recovery_details",
+      "type": "string",
+      "default": "Analyst recovery needed"
     }
   ]
 }

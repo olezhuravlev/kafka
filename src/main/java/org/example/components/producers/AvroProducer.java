@@ -41,7 +41,7 @@ public class AvroProducer {
         
         for (int i = 0; i < messagesCount; ++i) {
             try (Producer<Long, Alert> producer = new KafkaProducer<>(properties)) {
-                Alert alert = new Alert(12345L, Instant.now().toEpochMilli(), AlertStatus.Critical);
+                Alert alert = new Alert(12345L, Instant.now().toEpochMilli(), AlertStatus.Critical, "my_recovery_details");
                 LOGGER.info("kinaction_info Alert -> {}", alert);
                 ProducerRecord<Long, Alert> producerRecord = new ProducerRecord<>(topic, alert.getSensorId(), alert);
                 producer.send(producerRecord, (metadata, exception) -> {

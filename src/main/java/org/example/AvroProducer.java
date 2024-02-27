@@ -21,7 +21,7 @@ public class AvroProducer {
     
     final static Logger LOGGER = LoggerFactory.getLogger(AvroProducer.class);
     public static final String TOPIC = "kinaction_hw";
-    public static final String BOOTSTRAP_SERVERS = "kafka-broker-1:29092";
+    public static final String BOOTSTRAP_SERVERS = "kafka-broker-1:9092";
     
     public static void main(String[] args) {
         
@@ -38,7 +38,7 @@ public class AvroProducer {
         
         for (int i = 0; i < 1; ++i) {
             try (Producer<Long, Alert> producer = new KafkaProducer<>(properties)) {
-                Alert alert = new Alert(12345L, Instant.now().toEpochMilli(), AlertStatus.Critical);
+                Alert alert = new Alert(12345L, Instant.now().toEpochMilli(), AlertStatus.Critical, "my_recovery_details");
                 LOGGER.info("kinaction_info Alert -> {}", alert);
                 ProducerRecord<Long, Alert> producerRecord = new ProducerRecord<>(TOPIC, alert.getSensorId(), alert);
                 producer.send(producerRecord, new Callback() {

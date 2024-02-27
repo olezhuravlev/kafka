@@ -625,3 +625,32 @@ $ docker exec -it kafka-broker-3 kafka-console-consumer --topic kinaction_test_s
 
 
 ---
+
+### Schema-registry
+
+REST API request:
+````bash
+$ curl -X GET http://schema-registry:8081/config 
+{"compatibilityLevel":"BACKWARD"}%                                                                                                                                                                                                                                   
+
+$ curl -X GET -H 'application/vnd.schemaregistry.v1+json' http://schema-registry:8081/config
+{"compatibilityLevel":"BACKWARD"}%       
+````
+
+Test compatibility:
+````bash
+$ curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+--data '{ "schema": "{ \"type\": \"record\", \"name\": \"Alert\", \"fields\": [{ \"name\": \"notafield\", \"type\": \"long\" } ]}" }' \
+http://localhost:8081/compatibility/subjects/kinaction_hw-value/versions/latest
+{"is_compatible":false}%  
+````
+
+Retrieve schemas of different versions from registry:
+````bash
+$ curl http://localhost:8081/subjects/kinaction_hw-value/versions/1
+{"subject":"kinaction_hw-value","version":1,"id":1,"schema":"{\"type\":\"record\",\"name\":\"Alert\",\"namespace\":\"org.kafkainaction\",\"fields\":[{\"name\":\"sensor_id\",\"type\":\"long\",\"doc\":\"The unique id that identifies the sensor\"},{\"name\":\"time\",\"type\":\"long\",\"doc\":\"Time the alert was generated as UTC milliseconds from the epoch\"},{\"name\":\"status\",\"type\":{\"type\":\"enum\",\"name\":\"AlertStatus\",\"symbols\":[\"Critical\",\"Major\",\"Minor\",\"Warning\"]},\"doc\":\"The allowed values that our sensors will use to emit current status\"}]}"}%                                                                                                                                                                                                             
+
+$ curl http://localhost:8081/subjects/kinaction_hw-value/versions/2
+{"subject":"kinaction_hw-value","version":2,"id":2,"schema":"{\"type\":\"record\",\"name\":\"Alert\",\"namespace\":\"org.kafkainaction\",\"fields\":[{\"name\":\"sensor_id\",\"type\":\"long\",\"doc\":\"The unique id that identifies the sensor\"},{\"name\":\"time\",\"type\":\"long\",\"doc\":\"Time the alert was generated as UTC milliseconds from the epoch\"},{\"name\":\"status\",\"type\":{\"type\":\"enum\",\"name\":\"AlertStatus\",\"symbols\":[\"Critical\",\"Major\",\"Minor\",\"Warning\"]},\"doc\":\"The allowed values that our sensors will use to emit current status\"},{\"name\":\"recovery_details\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"default\":\"Analyst recovery needed\"}]}"}%       
+````
+
