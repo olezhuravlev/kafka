@@ -47,7 +47,6 @@ dependencies {
     testImplementation 'org.mockito:mockito-core'
 
     testImplementation 'org.apache.kafka:kafka-streams-test-utils'
-    testImplementation 'com.github.javafaker:javafaker:1.0.2'
 
     testCompileOnly 'junit:junit'
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'

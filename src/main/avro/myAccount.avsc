@@ -1,7 +1,7 @@
 {
   "namespace": "org.kafkainaction",
   "type": "record",
-  "name": "Account",
+  "name": "MyAccount",
   "fields": [
     {
       "name": "number",

@@ -1,23 +1,23 @@
 {
   "namespace": "org.kafkainaction",
   "type": "record",
-  "name": "TransactionResult",
+  "name": "MyTransactionResult",
   "includeSchemas": [
     {
-      "name": "Transaction"
+      "name": "MyTransaction"
     },
     {
-      "name": "Funds"
+      "name": "MyFunds"
     }
   ],
   "fields": [
     {
       "name": "transaction",
-      "type": "Transaction"
+      "type": "MyTransaction"
     },
     {
       "name": "funds",
-      "type": "Funds"
+      "type": "MyFunds"
     },
     {
       "name": "success",

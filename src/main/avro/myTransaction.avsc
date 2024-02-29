@@ -1,7 +1,7 @@
 {
   "namespace": "org.kafkainaction",
   "type": "record",
-  "name": "Transaction",
+  "name": "MyTransaction",
   "fields": [
     {
       "name": "guid",

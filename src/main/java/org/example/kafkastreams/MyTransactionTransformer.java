@@ -9,25 +9,25 @@ import java.util.Optional;
 import org.apache.kafka.streams.kstream.ValueTransformer;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.state.KeyValueStore;
-import org.kafkainaction.Funds;
-import org.kafkainaction.Transaction;
-import org.kafkainaction.TransactionResult;
+import org.kafkainaction.MyFunds;
+import org.kafkainaction.MyTransaction;
+import org.kafkainaction.MyTransactionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TransactionTransformer implements ValueTransformer<Transaction, TransactionResult> {
+public class MyTransactionTransformer implements ValueTransformer<MyTransaction, MyTransactionResult> {
     
-    private static final Logger log = LoggerFactory.getLogger(TransactionTransformer.class);
+    private static final Logger log = LoggerFactory.getLogger(MyTransactionTransformer.class);
     
     private final String stateStoreName;
-    private KeyValueStore<String, Funds> store;
+    private KeyValueStore<String, MyFunds> store;
     
-    public TransactionTransformer() {
+    public MyTransactionTransformer() {
         // default name for funds store
         this.stateStoreName = "fundsStore";
     }
     
-    public TransactionTransformer(final String stateStoreName) {
+    public MyTransactionTransformer(final String stateStoreName) {
         this.stateStoreName = stateStoreName;
     }
     
@@ -35,21 +35,21 @@ public class TransactionTransformer implements ValueTransformer<Transaction, Tra
     public void close() {
     }
     
-    private Funds createEmptyFunds(String account) {
-        Funds funds = new Funds(account, BigDecimal.ZERO);
+    private MyFunds createEmptyFunds(String account) {
+        MyFunds funds = new MyFunds(account, BigDecimal.ZERO);
         store.put(account, funds);
         return funds;
     }
     
-    private Funds depositFunds(Transaction transaction) {
+    private MyFunds depositFunds(MyTransaction transaction) {
         return updateFunds(transaction.getAccount(), transaction.getAmount());
     }
     
-    private Funds getFunds(String account) {
+    private MyFunds getFunds(String account) {
         return Optional.ofNullable(store.get(account)).orElseGet(() -> createEmptyFunds(account));
     }
     
-    private boolean hasEnoughFunds(Transaction transaction) {
+    private boolean hasEnoughFunds(MyTransaction transaction) {
         return getFunds(transaction.getAccount()).getBalance().compareTo(transaction.getAmount()) != -1;
     }
     
@@ -59,29 +59,29 @@ public class TransactionTransformer implements ValueTransformer<Transaction, Tra
     }
     
     @Override
-    public TransactionResult transform(Transaction transaction) {
+    public MyTransactionResult transform(MyTransaction transaction) {
         
         if (transaction.getType().equals(DEPOSIT)) {
-            return new TransactionResult(transaction, depositFunds(transaction), true, null);
+            return new MyTransactionResult(transaction, depositFunds(transaction), true, null);
         }
         
         if (hasEnoughFunds(transaction)) {
-            return new TransactionResult(transaction, withdrawFunds(transaction), true, null);
+            return new MyTransactionResult(transaction, withdrawFunds(transaction), true, null);
         }
         
         log.info("Not enough funds for account {}.", transaction.getAccount());
         
-        return new TransactionResult(transaction, getFunds(transaction.getAccount()), false, INSUFFICIENT_FUNDS);
+        return new MyTransactionResult(transaction, getFunds(transaction.getAccount()), false, INSUFFICIENT_FUNDS);
     }
     
-    private Funds updateFunds(String account, BigDecimal amount) {
-        Funds funds = new Funds(account, getFunds(account).getBalance().add(amount));
+    private MyFunds updateFunds(String account, BigDecimal amount) {
+        MyFunds funds = new MyFunds(account, getFunds(account).getBalance().add(amount));
         log.info("Updating funds for account {} with {}. Current balance is {}.", account, amount, funds.getBalance());
         store.put(account, funds);
         return funds;
     }
     
-    private Funds withdrawFunds(Transaction transaction) {
+    private MyFunds withdrawFunds(MyTransaction transaction) {
         return updateFunds(transaction.getAccount(), transaction.getAmount().negate());
     }
 }

@@ -21,17 +21,17 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.Stores;
 import org.junit.Before;
 import org.junit.Test;
-import org.kafkainaction.Funds;
-import org.kafkainaction.Transaction;
-import org.kafkainaction.TransactionResult;
+import org.kafkainaction.MyFunds;
+import org.kafkainaction.MyTransaction;
+import org.kafkainaction.MyTransactionResult;
 
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 
-public class TransactionTransformerTest {
+public class MyTransactionTransformerTest {
     
-    private KeyValueStore<String, Funds> fundsStore;
+    private KeyValueStore<String, MyFunds> fundsStore;
     private MockProcessorContext mockContext;
-    private ValueTransformer<Transaction, TransactionResult> transactionTransformer;
+    private ValueTransformer<MyTransaction, MyTransactionResult> transactionTransformer;
     final static Map<String, String> testConfig = Map.of(BOOTSTRAP_SERVERS_CONFIG, "localhost:8080", APPLICATION_ID_CONFIG, "mytest", SCHEMA_REGISTRY_URL_CONFIG, "mock://schema-registry.kafkainaction.org:8080");
     
     @Before
@@ -41,7 +41,7 @@ public class TransactionTransformerTest {
         properties.putAll(testConfig);
         mockContext = new MockProcessorContext(properties);
         
-        final SpecificAvroSerde<Funds> fundsSpecificAvroSerde = SchemaSerdes.getSpecificAvroSerde(properties);
+        final SpecificAvroSerde<MyFunds> fundsSpecificAvroSerde = MySchemaSerdes.getSpecificAvroSerde(properties);
         
         final Serde<String> stringSerde = Serdes.String();
         final String fundsStoreName = "fundsStore";
@@ -52,14 +52,14 @@ public class TransactionTransformerTest {
         fundsStore.init(mockContext, fundsStore);
         mockContext.register(fundsStore, null);
         
-        transactionTransformer = new TransactionTransformer(fundsStoreName);
+        transactionTransformer = new MyTransactionTransformer(fundsStoreName);
         transactionTransformer.init(mockContext);
     }
     
     @Test
     public void shouldStoreTransaction() {
-        final Transaction transaction = new Transaction(UUID.randomUUID().toString(), "1", new BigDecimal(100), DEPOSIT, "USD", "USA");
-        final TransactionResult transactionResult = transactionTransformer.transform(transaction);
+        final MyTransaction transaction = new MyTransaction(UUID.randomUUID().toString(), "1", new BigDecimal(100), DEPOSIT, "USD", "USA");
+        final MyTransactionResult transactionResult = transactionTransformer.transform(transaction);
         
         assertThat(transactionResult.getSuccess()).isTrue();
         
@@ -67,8 +67,8 @@ public class TransactionTransformerTest {
     
     @Test
     public void shouldHaveInsufficientFunds() {
-        final Transaction transaction = new Transaction(UUID.randomUUID().toString(), "1", new BigDecimal("100"), WITHDRAW, "RUR", "Russia");
-        final TransactionResult result = transactionTransformer.transform(transaction);
+        final MyTransaction transaction = new MyTransaction(UUID.randomUUID().toString(), "1", new BigDecimal("100"), WITHDRAW, "RUR", "Russia");
+        final MyTransactionResult result = transactionTransformer.transform(transaction);
         
         assertThat(result.getSuccess()).isFalse();
         assertThat(result.getErrorType()).isEqualTo(INSUFFICIENT_FUNDS);
@@ -76,11 +76,11 @@ public class TransactionTransformerTest {
     
     @Test
     public void shouldHaveEnoughFunds() {
-        final Transaction transaction1 = new Transaction(UUID.randomUUID().toString(), "1", new BigDecimal("300"), DEPOSIT, "RUR", "Russia");
+        final MyTransaction transaction1 = new MyTransaction(UUID.randomUUID().toString(), "1", new BigDecimal("300"), DEPOSIT, "RUR", "Russia");
         
-        final Transaction transaction2 = new Transaction(UUID.randomUUID().toString(), "1", new BigDecimal("200"), WITHDRAW, "RUR", "Russia");
+        final MyTransaction transaction2 = new MyTransaction(UUID.randomUUID().toString(), "1", new BigDecimal("200"), WITHDRAW, "RUR", "Russia");
         transactionTransformer.transform(transaction1);
-        final TransactionResult result = transactionTransformer.transform(transaction2);
+        final MyTransactionResult result = transactionTransformer.transform(transaction2);
         
         assertThat(result.getSuccess()).isTrue();
         assertThat(result.getErrorType()).isNull();

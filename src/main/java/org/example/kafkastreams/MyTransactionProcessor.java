@@ -32,20 +32,20 @@ import org.apache.kafka.streams.kstream.ValueTransformerSupplier;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
-import org.kafkainaction.Funds;
-import org.kafkainaction.Transaction;
-import org.kafkainaction.TransactionResult;
+import org.kafkainaction.MyFunds;
+import org.kafkainaction.MyTransaction;
+import org.kafkainaction.MyTransactionResult;
 
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 
-public class TransactionProcessor {
+public class MyTransactionProcessor {
     
     private final String transactionsInputTopicName;
     private final String transactionSuccessTopicName;
     private final String transactionFailedTopicName;
     private final String fundsStoreName;
     
-    public TransactionProcessor(final String transactionsInputTopicName, final String transactionSuccessTopicName, final String transactionFailedTopicName, final String fundsStoreName) {
+    public MyTransactionProcessor(final String transactionsInputTopicName, final String transactionSuccessTopicName, final String transactionFailedTopicName, final String fundsStoreName) {
         
         this.transactionsInputTopicName = transactionsInputTopicName;
         this.transactionSuccessTopicName = transactionSuccessTopicName;
@@ -53,7 +53,7 @@ public class TransactionProcessor {
         this.fundsStoreName = fundsStoreName;
     }
     
-    private static boolean success(String account, TransactionResult result) {
+    private static boolean success(String account, MyTransactionResult result) {
         return result.getSuccess();
     }
     
@@ -64,7 +64,7 @@ public class TransactionProcessor {
         String transactionFailedTopicName = "transaction-failed";
         String fundsStoreName = "funds-store";
         
-        final TransactionProcessor transactionProcessor = new TransactionProcessor(transactionsInputTopicName, transactionSuccessTopicName, transactionFailedTopicName, fundsStoreName);
+        final MyTransactionProcessor myTransactionProcessor = new MyTransactionProcessor(transactionsInputTopicName, transactionSuccessTopicName, transactionFailedTopicName, fundsStoreName);
         
         Properties props = new Properties();
         props.put(APPLICATION_ID_CONFIG, "transaction-processor");
@@ -72,18 +72,21 @@ public class TransactionProcessor {
         props.put(SCHEMA_REGISTRY_URL_CONFIG, "http://localhost:8081");
         props.put(METRICS_RECORDING_LEVEL_CONFIG, TRACE.name);
         
-        transactionProcessor.createTopics(props, transactionsInputTopicName, transactionSuccessTopicName, transactionFailedTopicName);
+        myTransactionProcessor.createTopics(props, transactionsInputTopicName, transactionSuccessTopicName, transactionFailedTopicName);
         
+        // Starting point for topology building.
         StreamsBuilder builder = new StreamsBuilder();
         
         // could use default serde config instead
-        final SpecificAvroSerde<Transaction> transactionRequestAvroSerde = SchemaSerdes.getSpecificAvroSerde(props);
-        final SpecificAvroSerde<TransactionResult> transactionResultAvroSerde = SchemaSerdes.getSpecificAvroSerde(props);
-        final SpecificAvroSerde<Funds> fundsSerde = SchemaSerdes.getSpecificAvroSerde(props);
+        final SpecificAvroSerde<MyTransaction> transactionRequestAvroSerde = MySchemaSerdes.getSpecificAvroSerde(props);
+        final SpecificAvroSerde<MyTransactionResult> transactionResultAvroSerde = MySchemaSerdes.getSpecificAvroSerde(props);
+        final SpecificAvroSerde<MyFunds> fundsSerde = MySchemaSerdes.getSpecificAvroSerde(props);
         
-        final Topology topology = transactionProcessor.topology(builder, transactionRequestAvroSerde, transactionResultAvroSerde, fundsSerde);
+        // Create topology consisting of printing, storing into table, transforming and two receiving topics.
+        final Topology topology = myTransactionProcessor.createTopology(builder, transactionRequestAvroSerde, transactionResultAvroSerde, fundsSerde);
         
         System.out.println("topology = " + topology.describe().toString());
+        
         final KafkaStreams streams = new KafkaStreams(topology, props);
         final CountDownLatch latch = new CountDownLatch(1);
         
@@ -97,6 +100,8 @@ public class TransactionProcessor {
         });
         
         try {
+            // Clean up local state storages.
+            streams.cleanUp();
             streams.start();
             latch.await();
         } catch (Throwable e) {
@@ -113,43 +118,45 @@ public class TransactionProcessor {
         }
     }
     
-    public Topology topology(final StreamsBuilder builder, final SpecificAvroSerde<Transaction> transactionRequestAvroSerde, final SpecificAvroSerde<TransactionResult> transactionResultAvroSerde, final SpecificAvroSerde<Funds> fundsSerde) {
+    public Topology createTopology(final StreamsBuilder builder, final SpecificAvroSerde<MyTransaction> transactionRequestAvroSerde, final SpecificAvroSerde<MyTransactionResult> transactionResultAvroSerde, final SpecificAvroSerde<MyFunds> fundsSerde) {
         
         final Serde<String> stringSerde = Serdes.String();
         storesBuilder(this.fundsStoreName, stringSerde, fundsSerde);
         
         // 12.1
-        KStream<String, Transaction> transactionStream = builder.stream(this.transactionsInputTopicName, Consumed.with(stringSerde, transactionRequestAvroSerde));
+        // Create KStream object to start processing from the topic.
+        final KStream<String, MyTransaction> transactionStream = builder.stream(this.transactionsInputTopicName, Consumed.with(stringSerde, transactionRequestAvroSerde));
         
-        transactionStream.print(Printed.<String, Transaction>toSysOut().withLabel("transactions logger"));
+        // Extend topology with printing data (end node).
+        transactionStream.print(Printed.<String, MyTransaction>toSysOut().withLabel("transactions logger"));
         
-        transactionStream.toTable(Materialized.<String, Transaction, KeyValueStore<Bytes, byte[]>>as("latest-transactions").withKeySerde(stringSerde).withValueSerde(transactionRequestAvroSerde));
+        // Extend topology with writing data to table (end node).
+        transactionStream.toTable(Materialized.<String, MyTransaction, KeyValueStore<Bytes, byte[]>>as("latest-transactions").withKeySerde(stringSerde).withValueSerde(transactionRequestAvroSerde));
         
         // 12.2
-        KStream<String, TransactionResult> resultStream = transactionStream.transformValues(new ValueTransformerSupplier<>() {
+        // Extend topology with transforming processor.
+        final KStream<String, MyTransactionResult> resultStream = transactionStream.transformValues(new ValueTransformerSupplier<>() {
             @Override
-            public ValueTransformer<Transaction, TransactionResult> get() {
-                return new TransactionTransformer(fundsStoreName);
+            public ValueTransformer<MyTransaction, MyTransactionResult> get() {
+                return new MyTransactionTransformer(fundsStoreName);
             }
-            
             @Override
             public Set<StoreBuilder<?>> stores() {
-                return Set.of(TransactionProcessor.storesBuilder(fundsStoreName, stringSerde, fundsSerde));
+                return Set.of(MyTransactionProcessor.storesBuilder(fundsStoreName, stringSerde, fundsSerde));
             }
         });
         
-        /* final KStream<String, TransactionResult> resultStream =  transactionStream.transformValues(() -> new TransactionTransformer()); */
+        /* final KStream<String, TransactionResult> resultStream =  transactionStream.transformValues(() -> new MyTransactionTransformer()); */
         
         // 12.2
-        resultStream.filter(TransactionProcessor::success).to(this.transactionSuccessTopicName, Produced.with(Serdes.String(), transactionResultAvroSerde));
-        
-        // 12.2
-        resultStream.filterNot(TransactionProcessor::success).to(this.transactionFailedTopicName, Produced.with(Serdes.String(), transactionResultAvroSerde));
+        // Redirect successful/failed transactions to different topics.
+        resultStream.filter(MyTransactionProcessor::success).to(this.transactionSuccessTopicName, Produced.with(Serdes.String(), transactionResultAvroSerde));
+        resultStream.filterNot(MyTransactionProcessor::success).to(this.transactionFailedTopicName, Produced.with(Serdes.String(), transactionResultAvroSerde));
         
         return builder.build();
     }
     
-    protected static StoreBuilder<KeyValueStore<String, Funds>> storesBuilder(final String storeName, final Serde<String> keySerde, final SpecificAvroSerde<Funds> valueSerde) {
+    protected static StoreBuilder<KeyValueStore<String, MyFunds>> storesBuilder(final String storeName, final Serde<String> keySerde, final SpecificAvroSerde<MyFunds> valueSerde) {
         return Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore(storeName), keySerde, valueSerde);
     }
 }

@@ -1,21 +1,5 @@
 package org.example.kafkastreams;
 
-import com.github.javafaker.Faker;
-
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.kafkainaction.Account;
-
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Properties;
-import java.util.stream.IntStream;
-
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
-
 import static io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
 import static java.lang.String.valueOf;
 import static java.util.Collections.singletonList;
@@ -23,6 +7,21 @@ import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS
 import static org.apache.kafka.clients.producer.ProducerConfig.CLIENT_ID_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG;
+
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.stream.IntStream;
+
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.kafkainaction.MyAccount;
+
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
 
 public class AccountProducerTest {
     
@@ -42,16 +41,11 @@ public class AccountProducerTest {
             client.createTopics(singletonList(txRequest));
         }
         
-        try (var producer = new KafkaProducer<String, Account>(p)) {
+        try (var producer = new KafkaProducer<String, MyAccount>(p)) {
             
-            final var faker = Faker.instance();
             IntStream.range(1, 10).forEach(index -> {
-                final var account = new Account(index, faker.name().firstName(), faker.name().lastName(),
-                    faker.address().streetName(), faker.address().buildingNumber(),
-                    faker.address().city(),
-                    faker.address().country(),
-                    LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
-                    LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+                final var account = new MyAccount(index, "firstName_" + UUID.randomUUID(), "lastName_" + UUID.randomUUID(), "streetName_" + UUID.randomUUID(), "buildingNumber_" + UUID.randomUUID(), "city_" + UUID.randomUUID(), "country_" + UUID.randomUUID(),
+                    LocalDateTime.now().toEpochSecond(ZoneOffset.UTC), LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
                 producer.send(new ProducerRecord<>(ACCOUNT_TOPIC_NAME, valueOf(account.getNumber()), account));
             });
         }

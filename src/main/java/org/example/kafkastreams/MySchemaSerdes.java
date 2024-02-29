@@ -10,7 +10,7 @@ import org.apache.avro.specific.SpecificRecord;
 
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 
-public class SchemaSerdes {
+public class MySchemaSerdes {
     
     static <T extends SpecificRecord> SpecificAvroSerde<T> getSpecificAvroSerde(final Properties envProps) {
         
