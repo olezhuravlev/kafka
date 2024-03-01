@@ -42,7 +42,6 @@ public class AccountProducerTest {
         }
         
         try (var producer = new KafkaProducer<String, MyAccount>(p)) {
-            
             IntStream.range(1, 10).forEach(index -> {
                 final var account = new MyAccount(index, "firstName_" + UUID.randomUUID(), "lastName_" + UUID.randomUUID(), "streetName_" + UUID.randomUUID(), "buildingNumber_" + UUID.randomUUID(), "city_" + UUID.randomUUID(), "country_" + UUID.randomUUID(),
                     LocalDateTime.now().toEpochSecond(ZoneOffset.UTC), LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));

@@ -127,9 +127,14 @@ public class MyTransactionProcessor {
         // Create KStream object to start processing from the topic.
         final KStream<String, MyTransaction> transactionStream = builder.stream(this.transactionsInputTopicName, Consumed.with(stringSerde, transactionRequestAvroSerde));
         
+        // 12.5
+        // final GlobalKTable<String, MyTransaction> turnover = builder.globalTable("turnover");
+        
+        // 12.3
         // Extend topology with printing data (end node).
         transactionStream.print(Printed.<String, MyTransaction>toSysOut().withLabel("transactions logger"));
         
+        // 12.4
         // Extend topology with writing data to table (end node).
         transactionStream.toTable(Materialized.<String, MyTransaction, KeyValueStore<Bytes, byte[]>>as("latest-transactions").withKeySerde(stringSerde).withValueSerde(transactionRequestAvroSerde));
         
@@ -140,6 +145,7 @@ public class MyTransactionProcessor {
             public ValueTransformer<MyTransaction, MyTransactionResult> get() {
                 return new MyTransactionTransformer(fundsStoreName);
             }
+            
             @Override
             public Set<StoreBuilder<?>> stores() {
                 return Set.of(MyTransactionProcessor.storesBuilder(fundsStoreName, stringSerde, fundsSerde));

@@ -62,7 +62,6 @@ public class MyTransactionTransformerTest {
         final MyTransactionResult transactionResult = transactionTransformer.transform(transaction);
         
         assertThat(transactionResult.getSuccess()).isTrue();
-        
     }
     
     @Test

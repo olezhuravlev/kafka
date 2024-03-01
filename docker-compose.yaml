@@ -8,11 +8,11 @@ services:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SERVERS: 0.0.0.0:22888:23888
+      ZOOKEEPER_SERVERS: 0.0.0.0:2888:3888
     ports:
-      - "22181:2181" # External client communication port.
-      - "22888:2888" # Peers connection port.
-      - "23888:3888" # Leader election port.
+      - "2181:2181" # External client communication port.
+      - "2888:2888" # Peers connection port.
+      - "3888:3888" # Leader election port.
     networks:
       - kafka-network
 
@@ -173,6 +173,33 @@ services:
       KAFKA_REST_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
       KAFKA_REST_ZOOKEEPER_CONNECT: "zookeeper-1:2181"
       KAFKA_REST_BOOTSTRAP_SERVERS: "kafka-broker-3:9092"
+    networks:
+      - kafka-network
+
+  ksqldb-server:
+    image: "confluentinc/ksqldb-server:${KSQL_VERSION}"
+    hostname: ksqldb-server
+    container_name: ksqldb-server
+    depends_on:
+      - kafka-broker-3
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_BOOTSTRAP_SERVERS: "kafka-broker-3:9092"
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+    networks:
+      - kafka-network
+
+  ksqldb-cli:
+    image: "confluentinc/ksqldb-cli:${KSQL_VERSION}"
+    container_name: ksqldb-cli
+    depends_on:
+      - kafka-broker-3
+      - ksqldb-server
+    entrypoint: /bin/sh
+    tty: true
     networks:
       - kafka-network
 
