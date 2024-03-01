@@ -654,3 +654,216 @@ $ curl http://localhost:8081/subjects/kinaction_hw-value/versions/2
 {"subject":"kinaction_hw-value","version":2,"id":2,"schema":"{\"type\":\"record\",\"name\":\"Alert\",\"namespace\":\"org.kafkainaction\",\"fields\":[{\"name\":\"sensor_id\",\"type\":\"long\",\"doc\":\"The unique id that identifies the sensor\"},{\"name\":\"time\",\"type\":\"long\",\"doc\":\"Time the alert was generated as UTC milliseconds from the epoch\"},{\"name\":\"status\",\"type\":{\"type\":\"enum\",\"name\":\"AlertStatus\",\"symbols\":[\"Critical\",\"Major\",\"Minor\",\"Warning\"]},\"doc\":\"The allowed values that our sensors will use to emit current status\"},{\"name\":\"recovery_details\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"default\":\"Analyst recovery needed\"}]}"}%       
 ````
 
+### KSQL
+````bash
+$ docker exec -it ksqldb-cli ksql http://ksqldb-server:8088
+                  
+                  ===========================================
+                  =       _              _ ____  ____       =
+                  =      | | _____  __ _| |  _ \| __ )      =
+                  =      | |/ / __|/ _` | | | | |  _ \      =
+                  =      |   <\__ \ (_| | | |_| | |_) |     =
+                  =      |_|\_\___/\__, |_|____/|____/      =
+                  =                   |_|                   =
+                  =        The Database purpose-built       =
+                  =        for stream processing apps       =
+                  ===========================================
+
+Copyright 2017-2022 Confluent Inc.
+
+CLI v0.29.0, Server v0.29.0 located at http://ksqldb-server:8088
+Server Status: RUNNING
+
+Having trouble? Type 'help' (case-insensitive) for a rundown of how things work!
+
+ksql>
+````
+
+Reset offset to see all records:
+````bash
+ksql> SET 'auto.offset.reset'='earliest';
+Successfully changed local property 'auto.offset.reset' to 'earliest'. Use the UNSET command to revert your change.
+ksql>
+````
+
+### Create topology: org.example.kafkastreams.MyTransactionProcessor.main
+
+````bash
+ksql> SHOW TOPICS;
+
+ Kafka Topic                                         | Partitions | Partition Replicas 
+---------------------------------------------------------------------------------------
+ _my_schema_registry                                 | 1          | 3                  
+ default_ksql_processing_log                         | 1          | 1                  
+ transaction-failed                                  | 6          | 1                  
+ transaction-processor-funds-store-changelog         | 6          | 1                  
+ transaction-processor-latest-transactions-changelog | 6          | 1                  
+ transaction-request                                 | 6          | 1                  
+ transaction-success                                 | 6          | 1                  
+---------------------------------------------------------------------------------------
+
+ksql> SHOW TOPICS;
+
+ Kafka Topic                                         | Partitions | Partition Replicas 
+---------------------------------------------------------------------------------------
+ _my_schema_registry                                 | 1          | 3                  
+ default_ksql_processing_log                         | 1          | 1                  
+ transaction-failed                                  | 6          | 1                  
+ transaction-processor-funds-store-changelog         | 6          | 1                  
+ transaction-processor-latest-transactions-changelog | 6          | 1                  
+ transaction-request                                 | 6          | 1                  
+ transaction-success                                 | 6          | 1                  
+---------------------------------------------------------------------------------------
+
+ksql> SHOW TABLES;
+
+ Table Name | Kafka Topic | Key Format | Value Format | Windowed 
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+ksql> SHOW STREAMS;
+
+ Stream Name         | Kafka Topic                 | Key Format | Value Format | Windowed 
+------------------------------------------------------------------------------------------
+ KSQL_PROCESSING_LOG | default_ksql_processing_log | KAFKA      | JSON         | false    
+------------------------------------------------------------------------------------------
+````
+
+### Create transactions in topic "transaction-request": org.example.kafkastreams.TransactionProducerTest.main
+
+````bash
+ksql> CREATE TABLE ACCOUNT (
+  numkey string PRIMARY KEY,
+  number INT,
+  firstName STRING,
+  lastName STRING,
+  numberAddress STRING,
+  streetAddress STRING,
+  cityAddress STRING,
+  countryAddress STRING,
+  creationDate BIGINT,
+  updateDate BIGINT
+) WITH (KAFKA_TOPIC = 'account', VALUE_FORMAT='avro', PARTITIONS=6, REPLICAS=1);
+
+ Message       
+---------------
+ Table created 
+---------------
+
+ksql> SHOW TOPICS;
+
+ Kafka Topic                                         | Partitions | Partition Replicas 
+---------------------------------------------------------------------------------------
+ _my_schema_registry                                 | 1          | 3                  
+ account                                             | 6          | 1                  
+ default_ksql_processing_log                         | 1          | 1                  
+ transaction-failed                                  | 6          | 1                  
+ transaction-processor-funds-store-changelog         | 6          | 1                  
+ transaction-processor-latest-transactions-changelog | 6          | 1                  
+ transaction-request                                 | 6          | 1                  
+ transaction-success                                 | 6          | 1                  
+---------------------------------------------------------------------------------------
+
+ksql> SHOW TABLES;
+
+ Table Name | Kafka Topic | Key Format | Value Format | Windowed 
+-----------------------------------------------------------------
+ ACCOUNT    | account     | KAFKA      | AVRO         | false    
+-----------------------------------------------------------------
+
+ksql> SHOW STREAMS;
+
+ Stream Name         | Kafka Topic                 | Key Format | Value Format | Windowed 
+------------------------------------------------------------------------------------------
+ KSQL_PROCESSING_LOG | default_ksql_processing_log | KAFKA      | JSON         | false    
+------------------------------------------------------------------------------------------
+````
+
+````bash
+ksql> CREATE
+STREAM TRANSACTION_SUCCESS (
+  numkey string KEY,
+  transaction STRUCT<guid STRING, account STRING, amount DECIMAL(9, 2), type STRING, currency STRING, country STRING>,
+  funds STRUCT<account STRING, balance DECIMAL(9, 2)>,
+  success boolean,
+  errorType STRING
+  --errorType STRUCT<type STRING>
+) WITH (KAFKA_TOPIC='transaction-success', VALUE_FORMAT='avro');
+
+ Message        
+----------------
+ Stream created 
+----------------
+
+ksql> SHOW TOPICS;
+
+ Kafka Topic                                         | Partitions | Partition Replicas 
+---------------------------------------------------------------------------------------
+ _my_schema_registry                                 | 1          | 3                  
+ account                                             | 6          | 1                  
+ default_ksql_processing_log                         | 1          | 1                  
+ transaction-failed                                  | 6          | 1                  
+ transaction-processor-funds-store-changelog         | 6          | 1                  
+ transaction-processor-latest-transactions-changelog | 6          | 1                  
+ transaction-request                                 | 6          | 1                  
+ transaction-success                                 | 6          | 1                  
+---------------------------------------------------------------------------------------
+
+ksql> SHOW TABLES;
+
+ Table Name | Kafka Topic | Key Format | Value Format | Windowed 
+-----------------------------------------------------------------
+ ACCOUNT    | account     | KAFKA      | AVRO         | false    
+-----------------------------------------------------------------
+
+ksql> SHOW STREAMS;
+
+ Stream Name         | Kafka Topic                 | Key Format | Value Format | Windowed 
+------------------------------------------------------------------------------------------
+ KSQL_PROCESSING_LOG | default_ksql_processing_log | KAFKA      | JSON         | false    
+ TRANSACTION_SUCCESS | transaction-success         | KAFKA      | AVRO         | false    
+------------------------------------------------------------------------------------------
+
+````
+
+````bash
+ksql> CREATE
+STREAM TRANSACTION_STATEMENT AS
+SELECT *
+FROM TRANSACTION_SUCCESS
+LEFT JOIN ACCOUNT ON TRANSACTION_SUCCESS.numkey = ACCOUNT.numkey EMIT CHANGES;
+
+ Message                                            
+----------------------------------------------------
+ Created query with ID CSAS_TRANSACTION_STATEMENT_5 
+----------------------------------------------------
+
+ksql> SHOW TOPICS;
+
+ Kafka Topic                                         | Partitions | Partition Replicas 
+---------------------------------------------------------------------------------------
+ TRANSACTION_STATEMENT                               | 6          | 1                  
+ _my_schema_registry                                 | 1          | 3                  
+ account                                             | 6          | 1                  
+ default_ksql_processing_log                         | 1          | 1                  
+ transaction-failed                                  | 6          | 1                  
+ transaction-processor-funds-store-changelog         | 6          | 1                  
+ transaction-processor-latest-transactions-changelog | 6          | 1                  
+ transaction-request                                 | 6          | 1                  
+ transaction-success                                 | 6          | 1                  
+---------------------------------------------------------------------------------------
+ksql> SHOW TABLES;
+
+ Table Name | Kafka Topic | Key Format | Value Format | Windowed 
+-----------------------------------------------------------------
+ ACCOUNT    | account     | KAFKA      | AVRO         | false    
+-----------------------------------------------------------------
+ksql> SHOW STREAMS;
+
+ Stream Name           | Kafka Topic                 | Key Format | Value Format | Windowed 
+--------------------------------------------------------------------------------------------
+ KSQL_PROCESSING_LOG   | default_ksql_processing_log | KAFKA      | JSON         | false    
+ TRANSACTION_STATEMENT | TRANSACTION_STATEMENT       | KAFKA      | AVRO         | false    
+ TRANSACTION_SUCCESS   | transaction-success         | KAFKA      | AVRO         | false    
+--------------------------------------------------------------------------------------------
+````

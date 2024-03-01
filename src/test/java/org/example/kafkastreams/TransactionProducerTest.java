@@ -53,6 +53,17 @@ public class TransactionProducerTest {
             final var tx8 = new MyTransaction(UUID.randomUUID().toString(), valueOf(2), new BigDecimal(300), DEPOSIT, "USD", "USA");
             final var tx9 = new MyTransaction(UUID.randomUUID().toString(), valueOf(2), new BigDecimal(300), WITHDRAW, "USD", "USA");
             
+            // final var tx1 = new MyTransaction(UUID.randomUUID().toString(), valueOf(1), new BigDecimal(100), WITHDRAW, "CAD", "CA");
+            // final var tx2 = new MyTransaction(UUID.randomUUID().toString(), valueOf(1), new BigDecimal(200), WITHDRAW, "CAD", "CA");
+            // final var tx3 = new MyTransaction(UUID.randomUUID().toString(), valueOf(1), new BigDecimal(300), WITHDRAW, "CAD", "CA");
+            // final var tx4 = new MyTransaction(UUID.randomUUID().toString(), valueOf(1), new BigDecimal(300), WITHDRAW, "CAD", "CA");
+            // final var tx5 = new MyTransaction(UUID.randomUUID().toString(), valueOf(1), new BigDecimal(1000), WITHDRAW, "CAD", "CA");
+            //
+            // final var tx6 = new MyTransaction(UUID.randomUUID().toString(), valueOf(2), new BigDecimal(100), WITHDRAW, "USD", "USA");
+            // final var tx7 = new MyTransaction(UUID.randomUUID().toString(), valueOf(2), new BigDecimal(50), WITHDRAW, "USD", "USA");
+            // final var tx8 = new MyTransaction(UUID.randomUUID().toString(), valueOf(2), new BigDecimal(300), WITHDRAW, "USD", "USA");
+            // final var tx9 = new MyTransaction(UUID.randomUUID().toString(), valueOf(2), new BigDecimal(300), WITHDRAW, "USD", "USA");
+            
             Stream.of(tx1, tx2, tx3, tx4, tx5, tx6, tx7, tx8, tx9).forEach(tx -> producer.send(new ProducerRecord<>("transaction-request", tx.getAccount(), tx)));
         }
     }
